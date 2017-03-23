@@ -272,6 +272,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 //static void SimpleBLEPeripheral_performPeriodicTask(void);
 //PANMIN-END
 
+
 static void SimpleBLEPeripheral_sendAttRsp(void);
 static void SimpleBLEPeripheral_freeAttRsp(uint8_t status);
 

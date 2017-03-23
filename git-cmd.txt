@@ -1,0 +1,5 @@
+git add .
+git add (folder)
+
+git commit -m "comment"
+git push -u origin master

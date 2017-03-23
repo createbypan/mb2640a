@@ -1,0 +1,116 @@
+
+----------------------------------------------------
+- Log Start Marker                                 -
+----------------------------------------------------
+
+[02/20/2017 04:29:28.719] <Info   > 
+Processing Command Line Arguments -> Successful {ProcessMgr}
+[02/20/2017 04:29:29.218] <Info   > /////////////////////////////////////////////////////////////////////// {ProcessMgr}
+[02/20/2017 04:29:29.546] <Info   > Processing Iar {ProcessMgr}
+[02/20/2017 04:29:29.686] <Info   > /////////////////////////////////////////////////////////////////////// {ProcessMgr}
+[02/20/2017 04:29:29.764] <Info   > Processing Linker Map File {ProcessIar}
+[02/20/2017 04:29:29.842] <Info   > 
+[ Map File Data ]
+ {ProcessMap}
+[02/20/2017 04:29:29.920] <Info   > Ram End Address = 0x200048E7 (536889575)
+ {SharedMap}
+[02/20/2017 04:29:30.014] <Info   > Read Only Code Size = 0x0000D8BD (55485)
+ {SharedMap}
+[02/20/2017 04:29:30.076] <Info   > Read Only Data Size = 0x0000220B (8715)
+ {SharedMap}
+[02/20/2017 04:29:30.154] <Info   > Read Write Data Size = 0x000004D3 (1235)
+ {SharedMap}
+[02/20/2017 04:29:30.232] <Info   > 
+[ Stack Size Calculation ]
+ {SharedMap}
+[02/20/2017 04:29:30.310] <Info   > Stack Size = 0x0000FAC8 (64200)
+ {SharedMap}
+[02/20/2017 04:29:30.388] <Info   > 
+Processing Linker Map File -> Successful {ProcessIar}
+[02/20/2017 04:29:30.466] <Info   > /////////////////////////////////////////////////////////////////////// {ProcessIar}
+[02/20/2017 04:29:30.544] <Info   > Processing Lcf File {ProcessIar}
+[02/20/2017 04:29:30.622] <Info   > 
+[ Lcf File Data ]
+ {ProcessLcf}
+[02/20/2017 04:29:30.716] <Info   > Chip Name = CC2640
+ {SharedLcf}
+[02/20/2017 04:29:31.043] <Info   > Nv Pages = not_used
+ {SharedLcf}
+[02/20/2017 04:29:31.293] <Info   > Ram Size = 0x00005000 (20480)
+ {SharedLcf}
+[02/20/2017 04:29:31.496] <Info   > Flash Size = 0x00020000 (131072)
+ {SharedLcf}
+[02/20/2017 04:29:31.558] <Info   > Page Size = 0x00001000 (4096)
+ {SharedLcf}
+[02/20/2017 04:29:31.652] <Info   > Reserved Pages = 0x00000001 (1)
+ {SharedLcf}
+[02/20/2017 04:29:31.730] <Info   > 
+[ Flash Boundary Calculation ]
+ {SharedLcf}
+[02/20/2017 04:29:31.792] <Info   > Bytes Used In Last Page Of Image = 0x00000AC8 (2760)
+ {SharedLcf}
+[02/20/2017 04:29:31.854] <Info   > Bytes Unused In Last Page Of Image = 0x00000538 (1336)
+ {SharedLcf}
+[02/20/2017 04:29:31.932] <Info   > Used Stack Pages = 0x00000010 (16)
+ {SharedLcf}
+[02/20/2017 04:29:31.995] <Info   > NV Pages = 0x00000000 (0)
+ {SharedLcf}
+[02/20/2017 04:29:32.057] <Info   > Reserved Pages = 0x00000001 (1)
+ {SharedLcf}
+[02/20/2017 04:29:32.135] <Info   > Total Used Pages = 0x00000011 (17)
+ {SharedLcf}
+[02/20/2017 04:29:32.198] <Info   > Flash Boundary Address = 0x0000F000 (61440)
+ {SharedLcf}
+[02/20/2017 04:29:32.276] <Info   > 
+[ Ram Boundary Calculation ]
+ {SharedLcf}
+[02/20/2017 04:29:32.338] <Info   > Margin Bytes = 0x002A (42)
+ {SharedLcf}
+[02/20/2017 04:29:32.416] <Info   > Unadjusted Ram Start Address = 0x200043EA (536888298)
+ {SharedLcf}
+[02/20/2017 04:29:32.478] <Info   > Alignment Value = 0x04 (4)
+ {SharedLcf}
+[02/20/2017 04:29:32.541] <Info   > Final Alignment Value = 0x06 (6)
+ {SharedLcf}
+[02/20/2017 04:29:32.603] <Info   > Total Ram Size = 0x00000503 (1283)
+ {SharedLcf}
+[02/20/2017 04:29:32.681] <Info   > Ram Boundary Address = 0x200043E4 (536888292)
+ {SharedLcf}
+[02/20/2017 04:29:32.900] <Info   > 
+[ Nv Boundary Calculation ]
+ {SharedLcf}
+[02/20/2017 04:29:33.040] <Info   > Reserved Size = 0x00001000 (4096)
+ {SharedLcf}
+[02/20/2017 04:29:33.102] <Info   > Reserved End = 0x0001FFFF (131071)
+ {SharedLcf}
+[02/20/2017 04:29:33.165] <Info   > Reserved Start = 0x0001F000 (126976)
+ {SharedLcf}
+[02/20/2017 04:29:33.243] <Info   > Nv Size = 0x00000000 (0)
+ {SharedLcf}
+[02/20/2017 04:29:33.305] <Info   > 
+Processing Lcf File -> Successful {ProcessIar}
+[02/20/2017 04:29:33.383] <Info   > /////////////////////////////////////////////////////////////////////// {ProcessIar}
+[02/20/2017 04:29:33.446] <Info   > Processing Project Config Files {ProcessIar}
+[02/20/2017 04:29:33.524] <Info   > 
+[ Compiler Config Settings ]
+ {ProcessCfg}
+[02/20/2017 04:29:33.617] <Info   > Compiler Flash Config Page = 0x0000F000 (61440)
+ {ProcessCfg}
+[02/20/2017 04:29:33.680] <Info   > Compiler Flash Config Boundary Page Matches Expected Boundary
+ {ProcessCfg}
+[02/20/2017 04:29:33.742] <Info   > 
+[ Linker Config Settings ]
+ {ProcessCfg}
+[02/20/2017 04:29:33.820] <Info   > Linker Flash Config Page = 0x0000F000 (61440)
+ {ProcessCfg}
+[02/20/2017 04:29:33.914] <Info   > Linker Flash Config Boundary Page Matches Expected Boundary
+ {ProcessCfg}
+[02/20/2017 04:29:33.976] <Info   > Linker Ram Config Page = 0x200043E4 (536888292)
+ {ProcessCfg}
+[02/20/2017 04:29:34.054] <Info   > Linker Ram Config Boundary Page Matches Expected Boundary
+ {ProcessCfg}
+[02/20/2017 04:29:34.116] <Info   > 
+Processing Project Config Files -> Successful {ProcessIar}
+[02/20/2017 04:29:34.179] <Info   > /////////////////////////////////////////////////////////////////////// {ProcessIar}
+[02/20/2017 04:29:34.257] <Info   > Boundary Operation Complete {ProcessMgr}
+[02/20/2017 04:29:34.319] <Info   > /////////////////////////////////////////////////////////////////////// {ProcessMgr}
