@@ -1,0 +1,9 @@
+eclipse.preferences.version=1
+environment/project/com.ti.ccstudio.buildDefinitions.TMS470.Default.67178137/CWD/delimiter=;
+environment/project/com.ti.ccstudio.buildDefinitions.TMS470.Default.67178137/CWD/operation=replace
+environment/project/com.ti.ccstudio.buildDefinitions.TMS470.Default.67178137/CWD/value=C\:\\ti\\simplelink\\ble_cc26xx_2_01_00_44423\\Projects\\ble\\SimpleBLEPeripheral\\CC26xx\\CCS\\MB2640A_App\\FlashROM
+environment/project/com.ti.ccstudio.buildDefinitions.TMS470.Default.67178137/PWD/delimiter=;
+environment/project/com.ti.ccstudio.buildDefinitions.TMS470.Default.67178137/PWD/operation=replace
+environment/project/com.ti.ccstudio.buildDefinitions.TMS470.Default.67178137/PWD/value=C\:\\ti\\simplelink\\ble_cc26xx_2_01_00_44423\\Projects\\ble\\SimpleBLEPeripheral\\CC26xx\\CCS\\MB2640A_App\\FlashROM
+environment/project/com.ti.ccstudio.buildDefinitions.TMS470.Default.67178137/append=true
+environment/project/com.ti.ccstudio.buildDefinitions.TMS470.Default.67178137/appendContributed=true
