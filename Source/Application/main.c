@@ -43,7 +43,7 @@
 #include "bcomdef.h"
 #include "peripheral.h"
 #include "MB2640A.h"
-#include "inc/npi_tl.h"
+#include "cmd.h"
 
 /* Header files required to enable instruction fetch cache */
 #include <inc/hw_memmap.h>
@@ -97,9 +97,8 @@ int main()
     /* Kick off profile - Priority 3 */
     GAPRole_createTask();
 
-    //PANMIN
-//    NPITL_createTask();
-    //PANMIN-END
+    cmd_createTask();
+
     SimpleBLEPeripheral_createTask();
 
 #ifdef FEATURE_OAD

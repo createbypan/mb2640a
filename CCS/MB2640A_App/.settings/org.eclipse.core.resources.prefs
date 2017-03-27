@@ -1,6 +1,8 @@
 eclipse.preferences.version=1
 encoding//Application/MB2640A.c=UTF-8
 encoding//Application/MB2640A.h=UTF-8
+encoding//FlashROM/Application/CMD/subdir_rules.mk=UTF-8
+encoding//FlashROM/Application/CMD/subdir_vars.mk=UTF-8
 encoding//FlashROM/Application/subdir_rules.mk=UTF-8
 encoding//FlashROM/Application/subdir_vars.mk=UTF-8
 encoding//FlashROM/Drivers/LCD/subdir_rules.mk=UTF-8

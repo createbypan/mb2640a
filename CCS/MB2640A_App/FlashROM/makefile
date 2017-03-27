@@ -12,11 +12,10 @@ GEN_CMDS__FLAG := -l"configPkg/linker.cmd"
 ORDERED_OBJS += \
 "C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/SimpleBLEPeripheral/CC26xx/CCS/Config/ccsLinkerDefines.cmd" \
 "C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/common/cc26xx/CCS/cc26xx_ble_app.cmd" \
+"./Application/CMD/cmd.obj" \
 "./Application/MB2640A.obj" \
 "./Application/MB2640A_util.obj" \
 "./Application/util.obj" \
-"./Drivers/LCD/LCDDogm1286.obj" \
-"./Drivers/LCD/LCDDogm1286_util.obj" \
 "./Drivers/PIN/PINCC26XX.obj" \
 "./Drivers/UART/UART.obj" \
 "./Drivers/UART/UARTCC26XX.obj" \
@@ -42,8 +41,8 @@ RMDIR := RMDIR /S/Q
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include Application/CMD/subdir_vars.mk
 -include Application/subdir_vars.mk
--include Drivers/LCD/subdir_vars.mk
 -include Drivers/PIN/subdir_vars.mk
 -include Drivers/UART/subdir_vars.mk
 -include ICall/subdir_vars.mk
@@ -51,8 +50,8 @@ RMDIR := RMDIR /S/Q
 -include PROFILES/subdir_vars.mk
 -include Startup/subdir_vars.mk
 -include TOOLS/subdir_vars.mk
+-include Application/CMD/subdir_rules.mk
 -include Application/subdir_rules.mk
--include Drivers/LCD/subdir_rules.mk
 -include Drivers/PIN/subdir_rules.mk
 -include Drivers/UART/subdir_rules.mk
 -include ICall/subdir_rules.mk
@@ -175,7 +174,7 @@ all: MB2640A_App.out
 MB2640A_App.out: $(OBJS) $(GEN_CMDS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: ARM Linker'
-	"C:/ti/ccsv6/tools/compiler/ti-cgt-arm_16.12.0.STS/bin/armcl" --cmd_file="C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/SimpleBLEPeripheral/CC26xx/CCS/MB2640A_App/../../IAR/Application/CC2640/../../../CCS/Config/ccsCompilerDefines.bcfg"  -mv7M3 --code_state=16 -me -Ooff --opt_for_speed=0 --define=USE_ICALL --define=MB2640A --define=POWER_SAVING --define=NPI_USE_UART --define=NPITL_TASK_PROTECT --define=xNPITL_UNIFIED_PROTOCOL --define=SBP_TASK_STACK_SIZE=700 --define=NPITL_TASK_STACK_SIZE=700 --define=GAPROLE_TASK_STACK_SIZE=520 --define=HEAPMGR_SIZE=2672 --define=MAX_PDU_SIZE=27 --define=xTI_DRIVERS_SPI_DMA_INCLUDED --define=xTI_DRIVERS_LCD_INCLUDED --define=ICALL_MAX_NUM_TASKS=4 --define=ICALL_MAX_NUM_ENTITIES=8 --define=xdc_runtime_Assert_DISABLE_ALL --define=xdc_runtime_Log_DISABLE_ALL --define=MAX_NUM_BLE_CONNS=1 --define=CC26XXWARE --define=CC26XX --define=ccs --define=DEBUG -g --gcc --diag_suppress=48 --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --abi=eabi -z -m"MB2640A_App.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv6/tools/compiler/ti-cgt-arm_16.12.0.STS/lib" -i"C:/ti/ccsv6/tools/compiler/ti-cgt-arm_16.12.0.STS/include" --reread_libs --diag_suppress=10247-D --diag_wrap=off --display_error_number --warn_sections --xml_link_info="MB2640A_App_linkInfo.xml" --rom_model --compress_dwarf=on --unused_section_elimination=on -o "MB2640A_App.out" $(ORDERED_OBJS)
+	"C:/ti/ccsv6/tools/compiler/ti-cgt-arm_16.12.0.STS/bin/armcl" --cmd_file="C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/SimpleBLEPeripheral/CC26xx/CCS/MB2640A_App/../../IAR/Application/CC2640/../../../CCS/Config/ccsCompilerDefines.bcfg"  -mv7M3 --code_state=16 -me -Ooff --opt_for_speed=0 --define=USE_ICALL --define=MB2640A --define=POWER_SAVING --define=SBP_TASK_STACK_SIZE=700 --define=CMD_TASK_STACK_SIZE=400 --define=GAPROLE_TASK_STACK_SIZE=520 --define=HEAPMGR_SIZE=2672 --define=MAX_PDU_SIZE=27 --define=xTI_DRIVERS_SPI_DMA_INCLUDED --define=xTI_DRIVERS_LCD_INCLUDED --define=ICALL_MAX_NUM_TASKS=4 --define=ICALL_MAX_NUM_ENTITIES=8 --define=xdc_runtime_Assert_DISABLE_ALL --define=xdc_runtime_Log_DISABLE_ALL --define=MAX_NUM_BLE_CONNS=1 --define=CC26XXWARE --define=CC26XX --define=ccs --define=DEBUG -g --gcc --diag_suppress=48 --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --abi=eabi -z -m"MB2640A_App.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv6/tools/compiler/ti-cgt-arm_16.12.0.STS/lib" -i"C:/ti/ccsv6/tools/compiler/ti-cgt-arm_16.12.0.STS/include" --reread_libs --diag_suppress=10247-D --diag_wrap=off --display_error_number --warn_sections --xml_link_info="MB2640A_App_linkInfo.xml" --rom_model --compress_dwarf=on --unused_section_elimination=on -o "MB2640A_App.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
@@ -191,8 +190,8 @@ MB2640A_App.hex: $(EXE_OUTPUTS)
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)$(GEN_FILES__QUOTED)$(BIN_OUTPUTS__QUOTED)$(GEN_OPTS__QUOTED)$(GEN_CMDS__QUOTED)
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
-	-$(RM) "Application\MB2640A.d" "Application\MB2640A_util.d" "Application\util.d" "Drivers\LCD\LCDDogm1286.d" "Drivers\LCD\LCDDogm1286_util.d" "Drivers\PIN\PINCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "ICall\ICall.d" "ICall\ICallCC2650.d" "ICallBLE\ICallBleAPI.d" "ICallBLE\bleUserConfig.d" "PROFILES\devinfoservice.d" "PROFILES\gatt_uuid.d" "PROFILES\gattservapp_util.d" "PROFILES\peripheral.d" "Startup\Board.d" "Startup\ccfg_appBLE.d" "Startup\main.d" 
-	-$(RM) "Application\MB2640A.obj" "Application\MB2640A_util.obj" "Application\util.obj" "Drivers\LCD\LCDDogm1286.obj" "Drivers\LCD\LCDDogm1286_util.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "ICall\ICall.obj" "ICall\ICallCC2650.obj" "ICallBLE\ICallBleAPI.obj" "ICallBLE\bleUserConfig.obj" "PROFILES\devinfoservice.obj" "PROFILES\gatt_uuid.obj" "PROFILES\gattservapp_util.obj" "PROFILES\peripheral.obj" "Startup\Board.obj" "Startup\ccfg_appBLE.obj" "Startup\main.obj" 
+	-$(RM) "Application\CMD\cmd.d" "Application\MB2640A.d" "Application\MB2640A_util.d" "Application\util.d" "Drivers\PIN\PINCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "ICall\ICall.d" "ICall\ICallCC2650.d" "ICallBLE\ICallBleAPI.d" "ICallBLE\bleUserConfig.d" "PROFILES\devinfoservice.d" "PROFILES\gatt_uuid.d" "PROFILES\gattservapp_util.d" "PROFILES\peripheral.d" "Startup\Board.d" "Startup\ccfg_appBLE.d" "Startup\main.d" 
+	-$(RM) "Application\CMD\cmd.obj" "Application\MB2640A.obj" "Application\MB2640A_util.obj" "Application\util.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "ICall\ICall.obj" "ICall\ICallCC2650.obj" "ICallBLE\ICallBleAPI.obj" "ICallBLE\bleUserConfig.obj" "PROFILES\devinfoservice.obj" "PROFILES\gatt_uuid.obj" "PROFILES\gattservapp_util.obj" "PROFILES\peripheral.obj" "Startup\Board.obj" "Startup\ccfg_appBLE.obj" "Startup\main.obj" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

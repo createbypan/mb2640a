@@ -48,9 +48,9 @@
 #include "board_key.h"
 #include "Board.h"
 
+#include "cmd.h"
 #include "MB2640A_util.h"
 #include "MB2640A.h"
-#include "inc/npi_tl.h"
 
 #include <ti/drivers/lcd/LCDDogm1286.h>
 
@@ -61,10 +61,10 @@
 #define DEFAULT_ADVERTISING_INTERVAL          1600//160
 
 // Advertising on period when device is discoverable (units of 1s)
-#define DEFAULT_ADVERTISING_ON_TIME           30
+#define DEFAULT_ADVERTISING_ON_TIME           5
 
 // Advertising off period when device is not discoverable (units of 1ms)//0 means the advertising will not on again whenever it is off
-#define DEFAULT_ADVERTISING_OFF_TIME           0
+#define DEFAULT_ADVERTISING_OFF_TIME           5000
 
 // Limited discoverable mode advertises for 30.72s, and then stops
 // General discoverable mode advertises indefinitely
@@ -271,7 +271,6 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 //static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID);
 //static void SimpleBLEPeripheral_performPeriodicTask(void);
 //PANMIN-END
-
 
 static void SimpleBLEPeripheral_sendAttRsp(void);
 static void SimpleBLEPeripheral_freeAttRsp(uint8_t status);
@@ -882,6 +881,8 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
   {
     case GAPROLE_STARTED:
       {
+    	log_write("GAPROLE_STARTED\r\n", strlen("GAPROLE_STARTED\r\n"), CMD_WRITE_WAIT);
+
         uint8_t *ownAddress = (uint8_t *)ICall_malloc(B_ADDR_LEN);
         uint8_t *systemId = (uint8_t *)ICall_malloc(DEVINFO_SYSTEM_ID_LEN);
 
@@ -936,6 +937,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
       break;
 
     case GAPROLE_ADVERTISING:
+    	log_write("GAPROLE_ADVERTISING\r\n", strlen("GAPROLE_ADVERTISING\r\n"), CMD_WRITE_WAIT);
       //PANMIN
 //      LCD_WRITE_STRING("Advertising", LCD_PAGE2);
       //PANMIN-END
@@ -1011,6 +1013,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
       break;
 
     case GAPROLE_WAITING:
+      log_write("GAPROLE_WAITING\r\n", strlen("GAPROLE_WAITING\r\n"), CMD_WRITE_WAIT);
       //PANMIN
 //      Util_stopClock(&periodicClock);
       //PANMIN-END

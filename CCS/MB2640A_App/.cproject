@@ -48,13 +48,13 @@
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compilerID.INCLUDE_PATH.1889741302" name="Add dir to #include search path (--include_path, -I)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compilerID.INCLUDE_PATH" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/cmd&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Common&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board/M2640A_7ID&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/ICall/Application&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/ICall/Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/ICall/Stack&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/NPI/unified&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/Profiles/Roles/CC26xx&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/Profiles/Roles&quot;"/>
@@ -82,11 +82,8 @@
 									<listOptionValue builtIn="false" value="USE_ICALL"/>
 									<listOptionValue builtIn="false" value="MB2640A"/>
 									<listOptionValue builtIn="false" value="POWER_SAVING"/>
-									<listOptionValue builtIn="false" value="NPI_USE_UART"/>
-									<listOptionValue builtIn="false" value="NPITL_TASK_PROTECT"/>
-									<listOptionValue builtIn="false" value="xNPITL_UNIFIED_PROTOCOL"/>
 									<listOptionValue builtIn="false" value="SBP_TASK_STACK_SIZE=700"/>
-									<listOptionValue builtIn="false" value="NPITL_TASK_STACK_SIZE=700"/>
+									<listOptionValue builtIn="false" value="CMD_TASK_STACK_SIZE=400"/>
 									<listOptionValue builtIn="false" value="GAPROLE_TASK_STACK_SIZE=520"/>
 									<listOptionValue builtIn="false" value="HEAPMGR_SIZE=2672"/>
 									<listOptionValue builtIn="false" value="MAX_PDU_SIZE=27"/>
@@ -164,7 +161,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Drivers/SPI/SPICC26XXDMA.c|Drivers/UDMA/UDMACC26XX.c|Application/board_lcd.c|PROFILES/oad.c|PROFILES/oad_target_externalFlash.c|TOOLS/cc26xx_ble_app_oad.cmd|Startup/ST|Board|cc26x0f128.cmd|PROFILES/simplekeys.h|PROFILES/simplekeys.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Drivers/SPI/SPI.c|Drivers/LCD/LCDDogm1286_util.c|Drivers/LCD/LCDDogm1286.c|Drivers/SPI/SPICC26XXDMA.c|Drivers/UDMA/UDMACC26XX.c|Application/board_lcd.c|PROFILES/oad.c|PROFILES/oad_target_externalFlash.c|TOOLS/cc26xx_ble_app_oad.cmd|Startup/ST|Board|cc26x0f128.cmd|PROFILES/simplekeys.h|PROFILES/simplekeys.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
