@@ -5,10 +5,16 @@
 
   Description:
 **************************************************************************************************/
-
+//Task_sleep(100000);//100000 = 1s
 /*********************************************************************
  * INCLUDES
  */
+#ifdef USE_ICALL
+#include <ICall.h>
+#else
+#include <stdlib.h>
+#endif
+
 #include <string.h>
 #include <stdbool.h>
 #include <ti/sysbios/knl/Task.h>
@@ -17,17 +23,21 @@
 #include <ti/drivers/pin/PINCC26XX.h>
 #include <ti/drivers/uart/UARTCC26XX.h>
 #include "board.h"
+#include "ringbuff.h"
 #include "cmd.h"
 
 /*********************************************************************
  * CONSTANTS
  */
+#define LOG FALSE
 // Task stack size
 #ifndef CMD_TASK_STACK_SIZE
 #define CMD_TASK_STACK_SIZE 128
 #endif
 // Task configuration
 #define CMD_TASK_PRIORITY 1
+
+#define CMD_BUFF_SIZE 128
 
 #define UART_BUAD 115200
 
@@ -59,26 +69,35 @@ typedef enum
 	CMD_DEINIT
 } cmdState_e;
 
+typedef void (*CMD_PROCESS_HANDLER)(
+    char *cmd
+);
+
+typedef struct{
+    char *cmd;
+    CMD_PROCESS_HANDLER handler;
+} cmdTable_t;
+
 /*********************************************************************
  * LOCAL VARIABLES
  */
 static UART_Handle uartHandle;
 static Semaphore_Struct cmdTxSem = {0};
 static Semaphore_Struct cmdRxSem = {0};
-static char rxBuf[UART_RX_BUF_SIZE] = {0};
+static Semaphore_Struct cmdCmdSem = {0};
+static uint8_t rxBuf[UART_RX_BUF_SIZE] = {0};
 static size_t cmdRxSize = 0;
+static RingBuff *cmdRxBuf = 0;
 
 static volatile bool cmdPMSetConstraint = false;
 static volatile bool cmdActive = false;
 
 // Task configuration
+static Task_Struct cmdRxTask;
 static Task_Struct cmdTask;
+static char cmdTaskRxStack[CMD_TASK_STACK_SIZE];
 static char cmdTaskStack[CMD_TASK_STACK_SIZE];
 static cmdState_e cmdState = CMD_INIT;
-
-// Queue object used for app messages
-static Queue_Struct appMsg;
-static Queue_Handle appMsgQueue;
 
 #ifdef POWER_SAVING
 static Semaphore_Struct cmdSBSem = {0};
@@ -113,6 +132,11 @@ static void cmd_openUart(void);
 static void cmd_closeUart(void);
 static int cmd_write(const void *buffer, size_t size);
 static void cmd_taskRxFxn(UArg a0, UArg a1);
+static void cmd_taskFxn(UArg a0, UArg a1);
+
+//command handle
+static void cmd_hdlFxn(char *cmd);
+static void cmd_onTest(char *cmd);
 
 #ifdef POWER_SAVING
 //! \brief HWI interrupt function for remRdy
@@ -122,8 +146,13 @@ static void cmd_relPM(void);
 #endif //POWER_SAVING
 
 /*********************************************************************
- * PROFILE CALLBACKS
+ * LOCAL VARIABLES
  */
+static cmdTable_t cmdTable[] =
+{
+    {"+TEST", cmd_onTest},
+	{NULL, NULL}
+};
 
 /*********************************************************************
  * PUBLIC FUNCTIONS
@@ -170,21 +199,21 @@ void uart_writeCallBack(UART_Handle handle, void *buf, size_t size)
 void cmd_openUart(void)
 {
 	UART_Params params = {
-			UART_MODE_CALLBACK,   /* readMode */
-			UART_MODE_CALLBACK,   /* writeMode */
-			UART_WAIT_FOREVER,    /* readTimeout */
-			UART_WAIT_FOREVER,    /* writeTimeout */
-			uart_readCallBack,    /* readCallback */
-			uart_writeCallBack,   /* writeCallback */
-			UART_RETURN_NEWLINE,  /* readReturnMode */
-		  	UART_DATA_BINARY,       /* readDataMode */
-			UART_DATA_BINARY,       /* writeDataMode */
-			UART_ECHO_OFF,         /* readEcho */
-			UART_BUAD,               /* baudRate */
-			UART_LEN_8,           /* dataLength */
-			UART_STOP_ONE,        /* stopBits */
-			UART_PAR_NONE,        /* parityType */
-			NULL                  /* custom */
+		UART_MODE_CALLBACK,   /* readMode */
+		UART_MODE_CALLBACK,   /* writeMode */
+		UART_WAIT_FOREVER,    /* readTimeout */
+		UART_WAIT_FOREVER,    /* writeTimeout */
+		uart_readCallBack,    /* readCallback */
+		uart_writeCallBack,   /* writeCallback */
+		UART_RETURN_NEWLINE,  /* readReturnMode */
+		UART_DATA_BINARY,       /* readDataMode */
+		UART_DATA_BINARY,       /* writeDataMode */
+		UART_ECHO_OFF,         /* readEcho */
+		UART_BUAD,               /* baudRate */
+		UART_LEN_8,           /* dataLength */
+		UART_STOP_ONE,        /* stopBits */
+		UART_PAR_NONE,        /* parityType */
+		NULL                  /* custom */
 	};
 
 	UART_init();
@@ -268,6 +297,8 @@ void cmd_createTask(void)
 	Semaphore_pend(Semaphore_handle(&cmdTxSem), UART_WAIT_FOREVER);
 	Semaphore_construct(&cmdRxSem, 1, &semParams);
 	Semaphore_pend(Semaphore_handle(&cmdRxSem), UART_WAIT_FOREVER);
+	Semaphore_construct(&cmdCmdSem, 1, &semParams);
+	Semaphore_pend(Semaphore_handle(&cmdCmdSem), UART_WAIT_FOREVER);
 
 #ifdef POWER_SAVING
 	Semaphore_construct(&cmdSBSem, 1, &semParams);
@@ -278,11 +309,16 @@ void cmd_createTask(void)
 
 	// Configure task
 	Task_Params_init(&taskParams);
+	taskParams.stack = cmdTaskRxStack;
+	taskParams.stackSize = CMD_TASK_STACK_SIZE;
+	taskParams.priority = CMD_TASK_PRIORITY;
+	Task_construct(&cmdRxTask, cmd_taskRxFxn, &taskParams, NULL);
+
+	Task_Params_init(&taskParams);
 	taskParams.stack = cmdTaskStack;
 	taskParams.stackSize = CMD_TASK_STACK_SIZE;
 	taskParams.priority = CMD_TASK_PRIORITY;
-
-	Task_construct(&cmdTask, cmd_taskRxFxn, &taskParams, NULL);
+	Task_construct(&cmdTask, cmd_taskFxn, &taskParams, NULL);
 }
 
 /*********************************************************************
@@ -330,11 +366,12 @@ void cmd_taskRxFxn(UArg a0, UArg a1)
 #else
 			cmdState = CMD_PRERESUME;
 #endif //POWER_SAVING
+			cmdRxBuf = RingBuffInit(CMD_BUFF_SIZE);
 			break;
 		}
 		case CMD_PRERESUME:{
 #ifdef POWER_SAVING
-			Task_sleep(50000);
+			Task_sleep(5000);//50ms
 			remRdy_state = PIN_getInputValue(remRdyPIN);
 			if(!remRdy_state){
 				cmd_setPM();
@@ -354,24 +391,29 @@ void cmd_taskRxFxn(UArg a0, UArg a1)
 				Semaphore_post(Semaphore_handle(&cmdTxSem));
 				cmdActive = true;
 			}
+#if (GL_LOG && LOG)
 			cmd_write("CMD_RESUME\r\n", strlen("CMD_RESUME\r\n"));
+#endif
 			LocRDY_ENABLE();
 			cmdState = CMD_RUN;
 			break;
 		}
 		case CMD_RUN:{
+#if (GL_LOG && LOG)
 			cmd_write("CMD_RUN\r\n", strlen("CMD_RUN\r\n"));
+#endif
 			cmdRxSize = 0;
-			UART_read(uartHandle, &rxBuf[0], UART_RX_BUF_SIZE);
+			UART_read(uartHandle, rxBuf, UART_RX_BUF_SIZE);
 			Semaphore_pend(Semaphore_handle(&cmdRxSem), UART_WAIT_FOREVER);
 			if(cmdRxSize > 0){
-				cmd_write(rxBuf, strlen(rxBuf));
+				WriteRingBuff(cmdRxBuf, rxBuf, cmdRxSize);
+				Semaphore_post(Semaphore_handle(&cmdCmdSem));
 			}
 			break;
 		}
 		case CMD_PRESUSPEND:{
 #ifdef POWER_SAVING
-			Task_sleep(50000);
+			Task_sleep(5000);//50ms
 			remRdy_state = PIN_getInputValue(remRdyPIN);
 			if(!remRdy_state){
 				cmdState = CMD_RESUME;
@@ -386,7 +428,9 @@ void cmd_taskRxFxn(UArg a0, UArg a1)
 		}
 		case CMD_SUSPEND:{
 			if(cmdActive){
+#if (GL_LOG && LOG)
 				cmd_write("CMD_SUSPEND\r\n", strlen("CMD_SUSPEND\r\n"));
+#endif
 				Semaphore_pend(Semaphore_handle(&cmdTxSem), UART_WAIT_FOREVER);
 				cmd_closeUart();
 				cmdActive = false;
@@ -404,6 +448,96 @@ void cmd_taskRxFxn(UArg a0, UArg a1)
 		}
 		}
 	}
+}
+
+/*********************************************************************
+ * @fn      cmd_taskFxn
+ *
+ * @brief   Application task entry point for the cmd.
+ *
+ * @param   a0, a1 - not used.
+ *
+ * @return  None.
+ */
+void cmd_taskFxn(UArg a0, UArg a1)
+{
+	for(;;){
+		Semaphore_pend(Semaphore_handle(&cmdCmdSem), UART_WAIT_FOREVER);
+		if(cmdRxBuf->count > 0){
+			char *cmd = (char *)ICall_malloc(cmdRxBuf->count + 1);
+			if(NULL != cmd){
+				memset(cmd, 0, cmdRxBuf->count + 1);
+				ReadRingBuff(cmdRxBuf, (uint8_t *)cmd, cmdRxBuf->count);
+				uint16_t size = 0;
+				uint16_t sizesize = 0;
+				char *pos = cmd;
+				char *pospos = 0;
+
+				while(true){
+					pospos = strstr(pos, "\r\n");
+					if(NULL != pospos){
+						size = pospos - pos + 2;
+						sizesize += size;
+						char *cmdcmd = (char *)ICall_malloc(size + 1);
+						if(NULL != cmdcmd){
+							memset(cmdcmd, 0, size + 1);
+							memcpy(cmdcmd, pos, size);
+							//handle command
+							cmd_hdlFxn(cmdcmd);
+							ICall_free(cmdcmd);
+						}
+						pos = pospos + 2;
+					}
+					else{
+						break;
+					}
+				}
+				DeleteRingBuff(cmdRxBuf, sizesize);
+				ICall_free(cmd);
+			}
+		}
+	}
+}
+
+/*********************************************************************
+ * @fn      cmd_taskFxn
+ *
+ * @brief   Application task entry point for the cmd.
+ *
+ * @param   a0, a1 - not used.
+ *
+ * @return  None.
+ */
+void cmd_hdlFxn(char *cmd)
+{
+	uint8_t i = 0;
+	for(i = 0; ;i++){
+		if(cmdTable[i].cmd != NULL){
+			if(strstr(cmd, cmdTable[i].cmd) != NULL){
+				if(cmdTable[i].handler != NULL){
+					cmdTable[i].handler(cmd);
+				}
+				break;
+			}
+		}
+		else{
+			break;
+		}
+	}
+}
+
+/*********************************************************************
+ * @fn      cmd_taskFxn
+ *
+ * @brief   Application task entry point for the cmd.
+ *
+ * @param   a0, a1 - not used.
+ *
+ * @return  None.
+ */
+void cmd_onTest(char *cmd)
+{
+	cmd_write(cmd, strlen(cmd));
 }
 
 // -----------------------------------------------------------------------------

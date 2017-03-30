@@ -97,6 +97,11 @@
 			<locationURI>copy_PARENT1/Source/Common/MB2640A_util.h</locationURI>
 		</link>
 		<link>
+			<name>Application/Ringbuff</name>
+			<type>2</type>
+			<location>C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/SimpleBLEPeripheral/CC26xx/Source/Application/ringbuff</location>
+		</link>
+		<link>
 			<name>Application/board_lcd.c</name>
 			<type>1</type>
 			<locationURI>PARENT-4-PROJECT_LOC/common/cc26xx/board_lcd.c</locationURI>

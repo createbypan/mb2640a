@@ -125,6 +125,7 @@ S64_DEPS__QUOTED :=
 SUBDIRS := \
 Application/CMD \
 Application \
+Application/Ringbuff \
 Drivers/PIN \
 Drivers/UART \
 ICall \

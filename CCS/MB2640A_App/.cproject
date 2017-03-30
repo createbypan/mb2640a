@@ -49,6 +49,7 @@
 									<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/cmd&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/ringbuff&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Common&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board/M2640A_7ID&quot;"/>
@@ -80,6 +81,7 @@
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compilerID.GCC.1414711055" name="Enable support for GCC extensions (DEPRECATED) (--gcc)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compilerID.GCC" value="true" valueType="boolean"/>
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compilerID.DEFINE.428829918" name="Pre-define NAME (--define, -D)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compilerID.DEFINE" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="USE_ICALL"/>
+									<listOptionValue builtIn="false" value="GL_LOG=TRUE"/>
 									<listOptionValue builtIn="false" value="MB2640A"/>
 									<listOptionValue builtIn="false" value="POWER_SAVING"/>
 									<listOptionValue builtIn="false" value="SBP_TASK_STACK_SIZE=700"/>
@@ -89,7 +91,7 @@
 									<listOptionValue builtIn="false" value="MAX_PDU_SIZE=27"/>
 									<listOptionValue builtIn="false" value="xTI_DRIVERS_SPI_DMA_INCLUDED"/>
 									<listOptionValue builtIn="false" value="xTI_DRIVERS_LCD_INCLUDED"/>
-									<listOptionValue builtIn="false" value="ICALL_MAX_NUM_TASKS=4"/>
+									<listOptionValue builtIn="false" value="ICALL_MAX_NUM_TASKS=5"/>
 									<listOptionValue builtIn="false" value="ICALL_MAX_NUM_ENTITIES=8"/>
 									<listOptionValue builtIn="false" value="xdc_runtime_Assert_DISABLE_ALL"/>
 									<listOptionValue builtIn="false" value="xdc_runtime_Log_DISABLE_ALL"/>
@@ -161,7 +163,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Drivers/SPI/SPI.c|Drivers/LCD/LCDDogm1286_util.c|Drivers/LCD/LCDDogm1286.c|Drivers/SPI/SPICC26XXDMA.c|Drivers/UDMA/UDMACC26XX.c|Application/board_lcd.c|PROFILES/oad.c|PROFILES/oad_target_externalFlash.c|TOOLS/cc26xx_ble_app_oad.cmd|Startup/ST|Board|cc26x0f128.cmd|PROFILES/simplekeys.h|PROFILES/simplekeys.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="PROFILES/simplekeys.h|Drivers/SPI/SPI.c|PROFILES/oad.c|TOOLS/cc26xx_ble_app_oad.cmd|Application/board_lcd.c|Drivers/LCD/LCDDogm1286.c|Board|Drivers/UDMA/UDMACC26XX.c|cc26x0f128.cmd|Startup/ST|Drivers/LCD/LCDDogm1286_util.c|PROFILES/oad_target_externalFlash.c|Drivers/SPI/SPICC26XXDMA.c|PROFILES/simplekeys.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -321,7 +323,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="TOOLS/cc26xx_ble_app.cmd|Startup/Board.c|cc26x0f128.cmd|PROFILES/simplekeys.h|PROFILES/simplekeys.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="PROFILES/simplekeys.h|Startup/Board.c|cc26x0f128.cmd|TOOLS/cc26xx_ble_app.cmd|PROFILES/simplekeys.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

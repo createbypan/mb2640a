@@ -5,7 +5,28 @@
 
   Description:    This file contains the application for use with the CC2650 Bluetooth Low Energy Protocol Stack.
 **************************************************************************************************/
+/*
+ * NV map
+ 7             0
+|- - - - - - - -| Flag(0xAA)
 
+|- - - - - - - -|
+|- - - - - - - -| PIN(compressed 4B)
+
+|-                Engineer Mode(0 - 1)
+ - -              Data Mode(0 - 3)
+ - - - - -|       Time Zone(0 - 1, 0 - 12)
+
+|-                Motor I/O Definition(0 - 1)
+ - - - - - - -|   Motor Drive Time(0 - 127)(50ms - 1280ms)(10ms interval)
+
+|-                Office Mode(0 - 1)
+ - - -            Office Mode Time(0 - 7)(3s - 8s)
+ - -              Heartbeat Interval(0 - 3)(30min - 120min)(30min interval)
+ - -|             Reserved
+
+|- - - - - - - -| Crc
+*/
 /*********************************************************************
  * INCLUDES
  */
@@ -881,8 +902,6 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
   {
     case GAPROLE_STARTED:
       {
-    	log_write("GAPROLE_STARTED\r\n", strlen("GAPROLE_STARTED\r\n"), CMD_WRITE_WAIT);
-
         uint8_t *ownAddress = (uint8_t *)ICall_malloc(B_ADDR_LEN);
         uint8_t *systemId = (uint8_t *)ICall_malloc(DEVINFO_SYSTEM_ID_LEN);
 
@@ -937,7 +956,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
       break;
 
     case GAPROLE_ADVERTISING:
-    	log_write("GAPROLE_ADVERTISING\r\n", strlen("GAPROLE_ADVERTISING\r\n"), CMD_WRITE_WAIT);
+    	log_write("+CONN: 1\r\n", strlen("+CONN: 1\r\n"), CMD_WRITE_WAIT);
       //PANMIN
 //      LCD_WRITE_STRING("Advertising", LCD_PAGE2);
       //PANMIN-END
@@ -973,6 +992,8 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 
     case GAPROLE_CONNECTED:
       {
+    	log_write("+CONN: 2\r\n", strlen("+CONN: 2\r\n"), CMD_WRITE_WAIT);
+
         uint8_t peerAddress[B_ADDR_LEN];
 
         GAPRole_GetParameter(GAPROLE_CONN_BD_ADDR, peerAddress);
@@ -1013,7 +1034,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
       break;
 
     case GAPROLE_WAITING:
-      log_write("GAPROLE_WAITING\r\n", strlen("GAPROLE_WAITING\r\n"), CMD_WRITE_WAIT);
+      log_write("+CONN: 0\r\n", strlen("+CONN: 0\r\n"), CMD_WRITE_WAIT);
       //PANMIN
 //      Util_stopClock(&periodicClock);
       //PANMIN-END
