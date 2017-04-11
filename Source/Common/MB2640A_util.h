@@ -52,6 +52,17 @@ extern "C" {
 extern uint8_t Util_convertAddr2Str(uint8_t *pSrc, uint8_t src_len, uint8_t **pDst, uint8_t dst_len);
 
 /*********************************************************************
+ * @fn      Util_crc8
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return crc8
+ */
+extern uint8_t Util_crc8(uint8_t *data, size_t length);
+
+/*********************************************************************
 *********************************************************************/
 
 #ifdef __cplusplus

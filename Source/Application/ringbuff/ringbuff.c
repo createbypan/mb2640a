@@ -33,8 +33,12 @@
 /******************************************************************************
  Local Function Declaration
 *******************************************************************************/
-uint16_t RingBuffAvail(RingBuff *buffer);
-bool IsValidIndex(const RingBuff * const buffer, uint16_t index);
+static uint16_t RingBuffAvail(RingBuff *buffer);
+static bool IsValidIndex(const RingBuff * const buffer, uint16_t index);
+static void RingBuffIdxIncr(RingBuff * const buffer, uint16_t *idx);
+//static void RingBuffIdxIncrBy(RingBuff * const buffer, uint16_t *idx, uint16_t step);
+//static void RingBuffIdxDecr(RingBuff * const buffer, uint16_t *idx);
+//static void RingBuffIdxDecrBy(RingBuff * const buffer, uint16_t *idx, uint16_t step);
 
 /******************************************************************************
  External Function Declaration
@@ -62,7 +66,7 @@ bool IsValidIndex(const RingBuff * const buffer, uint16_t index);
  * Overview:
  * Note:
  ********************************************************************/
-RingBuff *RingBuffInit(uint16_t size)
+RingBuff *Ringbuff_init(uint16_t size)
 {
     RingBuff *buffer = ICall_malloc(sizeof(RingBuff));
     if(buffer){
@@ -112,7 +116,7 @@ uint16_t RingBuffAvail(RingBuff *buffer)
  * Overview:
  * Note:
  ********************************************************************/
-bool PushRingBuff(RingBuff * const buffer, const uint8_t value)
+bool Ringbuff_push(RingBuff * const buffer, const uint8_t value)
 {
     if(buffer->isfull){
         return false;
@@ -137,7 +141,7 @@ bool PushRingBuff(RingBuff * const buffer, const uint8_t value)
  * Overview:
  * Note:
  ********************************************************************/
-bool PopRingBuff(RingBuff * const buffer, uint8_t *value)
+bool Ringbuff_pop(RingBuff * const buffer, uint8_t *value)
 {
     if(buffer->isempty){
         return false;
@@ -163,7 +167,7 @@ bool PopRingBuff(RingBuff * const buffer, uint8_t *value)
  * Overview:
  * Note:
  ********************************************************************/
-bool GetRingBuff(const RingBuff * const buffer, uint8_t *value, uint16_t index)
+bool Ringbuff_get(const RingBuff * const buffer, uint8_t *value, uint16_t index)
 {
     if(buffer->isempty){
         return false;
@@ -218,10 +222,10 @@ bool IsValidIndex(const RingBuff * const buffer, uint16_t index)
  * Overview:
  * Note:
  ********************************************************************/
-uint16_t WriteRingBuff(RingBuff * const buffer, const uint8_t *value, uint16_t size)
+uint16_t Ringbuff_write(RingBuff * const buffer, const uint8_t *value, uint16_t size)
 {
     uint16_t count = 0;
-    while((count < size) && (PushRingBuff(buffer, *value))){
+    while((count < size) && (Ringbuff_push(buffer, *value))){
         count++;
         value++;
     }
@@ -239,10 +243,10 @@ uint16_t WriteRingBuff(RingBuff * const buffer, const uint8_t *value, uint16_t s
  * Overview:
  * Note:
  ********************************************************************/
-uint16_t ReadNDelRingBuff(RingBuff * const buffer, uint8_t *value, uint16_t size)
+uint16_t Ringbuff_readNdel(RingBuff * const buffer, uint8_t *value, uint16_t size)
 {
     uint16_t count = 0;
-    while((count < size) && (PopRingBuff(buffer, value))){
+    while((count < size) && (Ringbuff_pop(buffer, value))){
         count++;
         value++;
     }
@@ -260,11 +264,11 @@ uint16_t ReadNDelRingBuff(RingBuff * const buffer, uint8_t *value, uint16_t size
  * Overview:
  * Note:
  ********************************************************************/
-uint16_t ReadRingBuff(RingBuff * const buffer, uint8_t *value, uint16_t size)
+uint16_t Ringbuff_read(RingBuff * const buffer, uint8_t *value, uint16_t size)
 {
     uint16_t count = 0;
     uint16_t idx = buffer->head;
-    while((count < size) && (GetRingBuff(buffer, value, idx))){
+    while((count < size) && (Ringbuff_get(buffer, value, idx))){
         count++;
         value++;
         RingBuffIdxIncr(buffer, &idx);
@@ -283,11 +287,11 @@ uint16_t ReadRingBuff(RingBuff * const buffer, uint8_t *value, uint16_t size)
  * Overview:
  * Note:
  ********************************************************************/
-uint16_t DeleteRingBuff(RingBuff * const buffer, uint16_t size)
+uint16_t Ringbuff_delete(RingBuff * const buffer, uint16_t size)
 {
     uint8_t value = 0;
     uint16_t count = 0;
-    while((count < size) && (PopRingBuff(buffer, &value))){
+    while((count < size) && (Ringbuff_pop(buffer, &value))){
         count++;
     }
 
@@ -319,14 +323,14 @@ void RingBuffIdxIncr(RingBuff * const buffer, uint16_t *idx)
  * Overview:
  * Note:
  ********************************************************************/
-void RingBuffIdxIncrBy(RingBuff * const buffer, uint16_t *idx, uint16_t step)
-{
-    uint16_t count = 0;
-    while(count < step){
-        RINGBUFF_IDX_INCR(buffer, *idx);
-        count++;
-    }
-}
+//void RingBuffIdxIncrBy(RingBuff * const buffer, uint16_t *idx, uint16_t step)
+//{
+//    uint16_t count = 0;
+//    while(count < step){
+//        RINGBUFF_IDX_INCR(buffer, *idx);
+//        count++;
+//    }
+//}
 
 /*********************************************************************
  * Function:
@@ -338,10 +342,10 @@ void RingBuffIdxIncrBy(RingBuff * const buffer, uint16_t *idx, uint16_t step)
  * Overview:
  * Note:
  ********************************************************************/
-void RingBuffIdxDecr(RingBuff * const buffer, uint16_t *idx)
-{
-    RINGBUFF_IDX_DECR(buffer, *idx);
-}
+//void RingBuffIdxDecr(RingBuff * const buffer, uint16_t *idx)
+//{
+//    RINGBUFF_IDX_DECR(buffer, *idx);
+//}
 
 /*********************************************************************
  * Function:
@@ -353,14 +357,14 @@ void RingBuffIdxDecr(RingBuff * const buffer, uint16_t *idx)
  * Overview:
  * Note:
  ********************************************************************/
-void RingBuffIdxDecrBy(RingBuff * const buffer, uint16_t *idx, uint16_t step)
-{
-    uint16_t count = 0;
-    while(count < step){
-        RINGBUFF_IDX_DECR(buffer, *idx);
-        count++;
-    }
-}
+//void RingBuffIdxDecrBy(RingBuff * const buffer, uint16_t *idx, uint16_t step)
+//{
+//    uint16_t count = 0;
+//    while(count < step){
+//        RINGBUFF_IDX_DECR(buffer, *idx);
+//        count++;
+//    }
+//}
 
 /*******************************************************************************
  End of File

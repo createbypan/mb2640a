@@ -97,7 +97,7 @@ int main()
     /* Kick off profile - Priority 3 */
     GAPRole_createTask();
 
-    cmd_createTask();
+    Cmd_createTask();
 
     SimpleBLEPeripheral_createTask();
 

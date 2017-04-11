@@ -13,6 +13,7 @@ ORDERED_OBJS += \
 "C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/SimpleBLEPeripheral/CC26xx/CCS/Config/ccsLinkerDefines.cmd" \
 "C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/common/cc26xx/CCS/cc26xx_ble_app.cmd" \
 "./Application/CMD/cmd.obj" \
+"./Application/Cust/cust_nv.obj" \
 "./Application/MB2640A.obj" \
 "./Application/MB2640A_util.obj" \
 "./Application/util.obj" \
@@ -43,6 +44,7 @@ RMDIR := RMDIR /S/Q
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include Application/CMD/subdir_vars.mk
+-include Application/Cust/subdir_vars.mk
 -include Application/subdir_vars.mk
 -include Application/Ringbuff/subdir_vars.mk
 -include Drivers/PIN/subdir_vars.mk
@@ -53,6 +55,7 @@ RMDIR := RMDIR /S/Q
 -include Startup/subdir_vars.mk
 -include TOOLS/subdir_vars.mk
 -include Application/CMD/subdir_rules.mk
+-include Application/Cust/subdir_rules.mk
 -include Application/subdir_rules.mk
 -include Application/Ringbuff/subdir_rules.mk
 -include Drivers/PIN/subdir_rules.mk
@@ -193,8 +196,8 @@ MB2640A_App.hex: $(EXE_OUTPUTS)
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)$(GEN_FILES__QUOTED)$(BIN_OUTPUTS__QUOTED)$(GEN_OPTS__QUOTED)$(GEN_CMDS__QUOTED)
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
-	-$(RM) "Application\CMD\cmd.d" "Application\MB2640A.d" "Application\MB2640A_util.d" "Application\util.d" "Application\Ringbuff\ringbuff.d" "Drivers\PIN\PINCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "ICall\ICall.d" "ICall\ICallCC2650.d" "ICallBLE\ICallBleAPI.d" "ICallBLE\bleUserConfig.d" "PROFILES\devinfoservice.d" "PROFILES\gatt_uuid.d" "PROFILES\gattservapp_util.d" "PROFILES\peripheral.d" "Startup\Board.d" "Startup\ccfg_appBLE.d" "Startup\main.d" 
-	-$(RM) "Application\CMD\cmd.obj" "Application\MB2640A.obj" "Application\MB2640A_util.obj" "Application\util.obj" "Application\Ringbuff\ringbuff.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "ICall\ICall.obj" "ICall\ICallCC2650.obj" "ICallBLE\ICallBleAPI.obj" "ICallBLE\bleUserConfig.obj" "PROFILES\devinfoservice.obj" "PROFILES\gatt_uuid.obj" "PROFILES\gattservapp_util.obj" "PROFILES\peripheral.obj" "Startup\Board.obj" "Startup\ccfg_appBLE.obj" "Startup\main.obj" 
+	-$(RM) "Application\CMD\cmd.d" "Application\Cust\cust_nv.d" "Application\MB2640A.d" "Application\MB2640A_util.d" "Application\util.d" "Application\Ringbuff\ringbuff.d" "Drivers\PIN\PINCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "ICall\ICall.d" "ICall\ICallCC2650.d" "ICallBLE\ICallBleAPI.d" "ICallBLE\bleUserConfig.d" "PROFILES\devinfoservice.d" "PROFILES\gatt_uuid.d" "PROFILES\gattservapp_util.d" "PROFILES\peripheral.d" "Startup\Board.d" "Startup\ccfg_appBLE.d" "Startup\main.d" 
+	-$(RM) "Application\CMD\cmd.obj" "Application\Cust\cust_nv.obj" "Application\MB2640A.obj" "Application\MB2640A_util.obj" "Application\util.obj" "Application\Ringbuff\ringbuff.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "ICall\ICall.obj" "ICall\ICallCC2650.obj" "ICallBLE\ICallBleAPI.obj" "ICallBLE\bleUserConfig.obj" "PROFILES\devinfoservice.obj" "PROFILES\gatt_uuid.obj" "PROFILES\gattservapp_util.obj" "PROFILES\peripheral.obj" "Startup\Board.obj" "Startup\ccfg_appBLE.obj" "Startup\main.obj" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

@@ -1,19 +1,45 @@
-#ifndef RINGBUFF_H
-#define RINGBUFF_H
+#ifndef CUST_NV_H
+#define CUST_NV_H
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+/*
+ * NV map
+ 7             0
+|- - - - - - - -|
+|- - - - - - - -| PIN(compressed 4B)
+
+|-                Engineer Mode(0 - 1)
+ - -              Data Mode(0 - 3)
+ - - - - -|       Time Zone(0 - 1, 0 - 12)
+
+|-                Motor I/O Definition(0 - 1)
+ - - - - - - -|   Motor Drive Time(0 - 127)(50ms - 1280ms)(10ms interval)
+
+|-                Office Mode(0 - 1)
+ - - -            Office Mode Time(0 - 7)(3s - 8s)
+ - -              Heartbeat Interval(0 - 3)(30min - 120min)(30min interval)
+ - -|             Reserved
+
+|- - - - - - - -| Reserved
+|- - - - - - - -| Reserved
+|- - - - - - - -| Reserved
+|- - - - - - - -| Reserved
+|- - - - - - - -| Reserved
+|- - - - - - - -| Reserved
+|- - - - - - - -| Reserved
+|- - - - - - - -| Reserved
+|- - - - - - - -| Reserved
+|- - - - - - - -| Reserved
+|- - - - - - - -| Crc
+
+*/
 /******************************************************************************
  Include
 *******************************************************************************/
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
 
 /******************************************************************************
  Macro Definition
@@ -22,15 +48,6 @@ extern "C"
 /******************************************************************************
  Type Definition
 *******************************************************************************/
-typedef struct RINGBUFF{
-	uint16_t tail;
-	uint16_t head;
-	uint16_t count;//used unit count
-    uint16_t size;//max. unit count
-	bool isfull;
-	bool isempty;
-	uint8_t *buff;
-} RingBuff;
 
 /******************************************************************************
  External Variable Definition
@@ -39,20 +56,15 @@ typedef struct RINGBUFF{
 /******************************************************************************
  External Function Definition
 *******************************************************************************/
-RingBuff *Ringbuff_init(uint16_t size);
-bool Ringbuff_push(RingBuff * const buffer, const uint8_t value);
-bool Ringbuff_pop(RingBuff * const buffer, uint8_t *value);
-bool Ringbuff_get(const RingBuff * const buffer, uint8_t *value, uint16_t index);
-uint16_t Ringbuff_write(RingBuff * const buffer, const uint8_t *value, uint16_t size);
-uint16_t Ringbuff_readNdel(RingBuff * const buffer, uint8_t *value, uint16_t size);
-uint16_t Ringbuff_read(RingBuff * const buffer, uint8_t *value, uint16_t size);
-uint16_t Ringbuff_delete(RingBuff * const buffer, uint16_t size);
+extern void CustNV_init(void);
+extern uint8_t CustNV_restore(void);
+extern uint8_t CustNV_save(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* RINGBUFF_H */
+#endif /* CUST_NV_H */
 /*******************************************************************************
  End of File
  */

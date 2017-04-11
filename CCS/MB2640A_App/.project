@@ -77,6 +77,11 @@
 			<location>C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/SimpleBLEPeripheral/CC26xx/Source/Application/cmd</location>
 		</link>
 		<link>
+			<name>Application/Cust</name>
+			<type>2</type>
+			<location>C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/SimpleBLEPeripheral/CC26xx/Source/Application/cust</location>
+		</link>
+		<link>
 			<name>Application/MB2640A.c</name>
 			<type>1</type>
 			<location>C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/SimpleBLEPeripheral/CC26xx/Source/Application/MB2640A.c</location>

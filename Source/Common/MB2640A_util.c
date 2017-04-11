@@ -84,4 +84,31 @@ uint8_t Util_convertAddr2Str(uint8_t *pSrc, uint8_t src_len, uint8_t **pDst, uin
 }
 
 /*********************************************************************
+ * @fn      Util_crc8
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+uint8_t Util_crc8(uint8_t *data, size_t length)
+{
+    uint8_t i;
+    uint8_t crc = 0;    // Initial value
+    while(length--)
+    {
+        crc ^= *data++; // crc ^= *data; data++;
+        for ( i = 0; i < 8; i++ )
+        {
+            if ( crc & 0x80 )
+                crc = (crc << 1) ^ 0x07;
+            else
+                crc <<= 1;
+        }
+    }
+    return crc;
+}
+
+/*********************************************************************
 *********************************************************************/

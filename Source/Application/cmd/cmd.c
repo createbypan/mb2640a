@@ -259,7 +259,7 @@ int cmd_write(const void *buffer, size_t size)
  *
  * @return  None.
  */
-int log_write(const void *buffer, size_t size, UInt32 timeout)
+int Log_write(const void *buffer, size_t size, UInt32 timeout)
 {
 	if(Semaphore_pend(Semaphore_handle(&cmdTxSem), timeout)){
 		return UART_write(uartHandle, buffer, size);
@@ -288,7 +288,7 @@ int log_write(const void *buffer, size_t size, UInt32 timeout)
  *
  * @return  None.
  */
-void cmd_createTask(void)
+void Cmd_createTask(void)
 {
 	Semaphore_Params semParams;
 	Semaphore_Params_init(&semParams);
@@ -366,7 +366,7 @@ void cmd_taskRxFxn(UArg a0, UArg a1)
 #else
 			cmdState = CMD_PRERESUME;
 #endif //POWER_SAVING
-			cmdRxBuf = RingBuffInit(CMD_BUFF_SIZE);
+			cmdRxBuf = Ringbuff_init(CMD_BUFF_SIZE);
 			break;
 		}
 		case CMD_PRERESUME:{
@@ -406,7 +406,7 @@ void cmd_taskRxFxn(UArg a0, UArg a1)
 			UART_read(uartHandle, rxBuf, UART_RX_BUF_SIZE);
 			Semaphore_pend(Semaphore_handle(&cmdRxSem), UART_WAIT_FOREVER);
 			if(cmdRxSize > 0){
-				WriteRingBuff(cmdRxBuf, rxBuf, cmdRxSize);
+				Ringbuff_write(cmdRxBuf, rxBuf, cmdRxSize);
 				Semaphore_post(Semaphore_handle(&cmdCmdSem));
 			}
 			break;
@@ -467,7 +467,7 @@ void cmd_taskFxn(UArg a0, UArg a1)
 			char *cmd = (char *)ICall_malloc(cmdRxBuf->count + 1);
 			if(NULL != cmd){
 				memset(cmd, 0, cmdRxBuf->count + 1);
-				ReadRingBuff(cmdRxBuf, (uint8_t *)cmd, cmdRxBuf->count);
+				Ringbuff_read(cmdRxBuf, (uint8_t *)cmd, cmdRxBuf->count);
 				uint16_t size = 0;
 				uint16_t sizesize = 0;
 				char *pos = cmd;
@@ -492,7 +492,7 @@ void cmd_taskFxn(UArg a0, UArg a1)
 						break;
 					}
 				}
-				DeleteRingBuff(cmdRxBuf, sizesize);
+				Ringbuff_delete(cmdRxBuf, sizesize);
 				ICall_free(cmd);
 			}
 		}

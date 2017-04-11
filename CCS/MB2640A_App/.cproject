@@ -50,6 +50,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/cmd&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/ringbuff&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/cust&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Common&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board/M2640A_7ID&quot;"/>

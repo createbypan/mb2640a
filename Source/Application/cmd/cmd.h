@@ -37,12 +37,12 @@ extern "C"
 /*
  *
  */
-extern int log_write(const void *buffer, size_t size, UInt32 timeout);
+extern int Log_write(const void *buffer, size_t size, UInt32 timeout);
 
 /*
  * Task creation function for the cmd.
  */
-extern void cmd_createTask(void);
+extern void Cmd_createTask(void);
 
 
 /*********************************************************************
