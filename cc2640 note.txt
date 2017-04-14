@@ -1,0 +1,17 @@
+20170412
+1) cmd task增加Log_writeStr, Log_printf两个函数
+由于调用Log_printf, 需要把CMD_TASK_STACK_SIZE调整到800, 否则栈溢出
+2) CustNV_restore, CustNV_save调用osal_snv_write返回值2, 写入失败. 但是在CustNV_init中调用osal_snv_write可以写入成功, 待解
+另发现持续调用osal_snv_write失败后会出现MSG_BUFFER_NOT_AVAIL错误
+
+20170413
+1) 由于cmd.c含两个task, 因此多定义CMD_RXTASK_STACK_SIZE, 值400, 减少RXTASK栈开销
+2) 关于昨天的第二点问题解决方法如下:
+1. 在cmd_taskFxn增加ICall_registerApp(&selfEntity, &sem);, 解决ICall_getEntityId()无法获取合法id的问题
+2. 只执行1, osal_snv_write或osal_snv_read不再返回2, 但是程序会跑飞. 解决方法, 在STACK工程修改OSAL_MAX_NUM_PROXY_TASKS值, 增加1. 因为增加了一个task与STACK交互, 所以该值要加1.
+3) 
+// Customer NV Items - Range  0x80 - 0x8F - This must match the number of Bonding entries
+#define BLE_NVID_CUST_START             0x80  //!< Start of the Customer's NV IDs
+#define BLE_NVID_CUST_END               0x8F  //!< End of the Customer's NV IDs
+这里不是指SNV只能存16个字节, 而是指SNV的用户ID范围.
+每个ID起始, 理论上可以存储252B. 视SNV占用情况而定.
