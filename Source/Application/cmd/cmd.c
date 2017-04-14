@@ -16,23 +16,33 @@
 #endif
 
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <ti/sysbios/knl/Task.h>
 #include <ti/sysbios/knl/Semaphore.h>
 #include <ti/sysbios/knl/Queue.h>
 #include <ti/drivers/pin/PINCC26XX.h>
 #include <ti/drivers/uart/UARTCC26XX.h>
+#include "bcomdef.h"
 #include "board.h"
 #include "ringbuff.h"
 #include "cmd.h"
+#include "cust_nv.h"
 
 /*********************************************************************
  * CONSTANTS
  */
 #define LOG FALSE
+#define LOG_WRITE_WAIT UART_WAIT_FOREVER
+
 // Task stack size
 #ifndef CMD_TASK_STACK_SIZE
-#define CMD_TASK_STACK_SIZE 128
+#define CMD_TASK_STACK_SIZE 800
+#endif
+
+#ifndef CMD_RXTASK_STACK_SIZE
+#define CMD_RXTASK_STACK_SIZE 400
 #endif
 // Task configuration
 #define CMD_TASK_PRIORITY 1
@@ -55,6 +65,35 @@
 #define LocRDY_DISABLE()
 #endif //POWER_SAVING
 
+#define STR_LEN_VALID_PIN (11 + PIN_LEN)
+
+#define STR_REQ_AT "AT"
+#define STR_REQ_HANDSHAKE "AT\r\n"
+#define STR_SET_PIN "AT+PIN=\"%[^\"]\"\r\n"
+#define STR_RES_PIN "+PIN=\"%s\"\r\n"
+#define STR_FORMAT_PIN "AT+PIN=\"\"\r\n"
+#define STR_SET_TIMEZONE "AT+TIMEZONE=%d\r\n"
+#define STR_RES_TIMEZONE "+TIMEZONE=%d\r\n"
+#define STR_FORMAT_TIMEZONE "AT+TIMEZONE=(-12 - 12)\r\n"
+#define STR_SET_MOTORMODE "AT+MOTORMODE=%d\r\n"
+#define STR_RES_MOTORMODE "+MOTORMODE=%d\r\n"
+#define STR_FORMAT_MOTORMODE "AT+MOTORMODE=(1,0)\r\n"
+#define STR_SET_MOTORTIME "AT+MOTORTIME=%d\r\n"
+#define STR_RES_MOTORTIME "+MOTORTIME=%d\r\n"
+#define STR_FORMAT_MOTORTIME "AT+MOTORTIME=(4 - 127)\r\n"
+#define STR_SET_OFFICEMODE "AT+OFFICEMODE=%d\r\n"
+#define STR_RES_OFFICEMODE "+OFFICEMODE=%d\r\n"
+#define STR_FORMAT_OFFICEMODE "AT+OFFICEMODE=(1,0)\r\n"
+#define STR_SET_OFFICETIME "AT+OFFICETIME=%d\r\n"
+#define STR_RES_OFFICETIME "+OFFICETIME=%d\r\n"
+#define STR_FORMAT_OFFICETIME "AT+OFFICETIME=(2 - 7)\r\n"
+#define STR_SET_HBINTERVAL "AT+HBINTERVAL=%d\r\n"
+#define STR_RES_HBINTERVAL "+HBINTERVAL=%d\r\n"
+#define STR_FORMAT_HBINTERVAL "AT+HBINTERVAL=(0 - 3)\r\n"
+
+#define STR_RES_OK "OK\r\n"
+#define STR_RES_ERROR "ERROR\r\n"
+
 /*********************************************************************
  * TYPEDEFS
  */
@@ -70,6 +109,7 @@ typedef enum
 } cmdState_e;
 
 typedef void (*CMD_PROCESS_HANDLER)(
+	uint8_t idx,
     char *cmd
 );
 
@@ -78,9 +118,26 @@ typedef struct{
     CMD_PROCESS_HANDLER handler;
 } cmdTable_t;
 
+typedef enum{
+	CMD_GET = 0,
+	CMD_SET,
+	CMD_FORMAT,
+	CMD_UNKNOWN
+} cmdType_e;
+
 /*********************************************************************
  * LOCAL VARIABLES
  */
+#if (GL_LOG)
+static char log[100] = {0};
+#endif
+
+// Entity ID globally used to check for source and/or destination of messages
+static ICall_EntityID selfEntity;
+
+// Semaphore globally used to post events to the application thread
+static ICall_Semaphore sem;
+
 static UART_Handle uartHandle;
 static Semaphore_Struct cmdTxSem = {0};
 static Semaphore_Struct cmdRxSem = {0};
@@ -95,7 +152,7 @@ static volatile bool cmdActive = false;
 // Task configuration
 static Task_Struct cmdRxTask;
 static Task_Struct cmdTask;
-static char cmdTaskRxStack[CMD_TASK_STACK_SIZE];
+static char cmdRxTaskStack[CMD_RXTASK_STACK_SIZE];
 static char cmdTaskStack[CMD_TASK_STACK_SIZE];
 static cmdState_e cmdState = CMD_INIT;
 
@@ -136,7 +193,15 @@ static void cmd_taskFxn(UArg a0, UArg a1);
 
 //command handle
 static void cmd_hdlFxn(char *cmd);
-static void cmd_onTest(char *cmd);
+static cmdType_e cmd_getType(uint8_t idx, char *cmd);
+static void cmd_onRestore(uint8_t idx, char *cmd);
+static void cmd_onPin(uint8_t idx, char *cmd);
+static void cmd_onTimeZone(uint8_t idx, char *cmd);
+static void cmd_onMotorMode(uint8_t idx, char *cmd);
+static void cmd_onMotorTime(uint8_t idx, char *cmd);
+static void cmd_onOfficeMode(uint8_t idx, char *cmd);
+static void cmd_onOfficeTime(uint8_t idx, char *cmd);
+static void cmd_onHBInterval(uint8_t idx, char *cmd);
 
 #ifdef POWER_SAVING
 //! \brief HWI interrupt function for remRdy
@@ -150,7 +215,14 @@ static void cmd_relPM(void);
  */
 static cmdTable_t cmdTable[] =
 {
-    {"+TEST", cmd_onTest},
+	{"+RESTORE", cmd_onRestore},
+	{"+PIN", cmd_onPin},
+	{"+TIMEZONE", cmd_onTimeZone},
+	{"+MOTORMODE", cmd_onMotorMode},
+	{"+MOTORTIME", cmd_onMotorTime},
+	{"+OFFICEMODE", cmd_onOfficeMode},
+	{"+OFFICETIME", cmd_onOfficeTime},
+	{"+HBINTERVAL", cmd_onHBInterval},
 	{NULL, NULL}
 };
 
@@ -259,15 +331,30 @@ int cmd_write(const void *buffer, size_t size)
  *
  * @return  None.
  */
-int Log_write(const void *buffer, size_t size, UInt32 timeout)
+#if (GL_LOG)
+int Log_writeStr(const char *buffer)
 {
-	if(Semaphore_pend(Semaphore_handle(&cmdTxSem), timeout)){
-		return UART_write(uartHandle, buffer, size);
+	if(Semaphore_pend(Semaphore_handle(&cmdTxSem), LOG_WRITE_WAIT)){
+		return UART_write(uartHandle, buffer, strlen(buffer));
 	}
 	else{
 		return UART_ERROR;
 	}
 }
+
+int Log_printf(const char *fmt, ...)
+{
+	if(Semaphore_pend(Semaphore_handle(&cmdTxSem), LOG_WRITE_WAIT)){
+		va_list ptr = {0};
+		va_start(ptr, fmt);
+		vsprintf(log, fmt, ptr);
+		return UART_write(uartHandle, log, strlen(log));
+	}
+	else{
+		return UART_ERROR;
+	}
+}
+#endif
 
 /*********************************************************************
  * @fn
@@ -309,8 +396,8 @@ void Cmd_createTask(void)
 
 	// Configure task
 	Task_Params_init(&taskParams);
-	taskParams.stack = cmdTaskRxStack;
-	taskParams.stackSize = CMD_TASK_STACK_SIZE;
+	taskParams.stack = cmdRxTaskStack;
+	taskParams.stackSize = CMD_RXTASK_STACK_SIZE;
 	taskParams.priority = CMD_TASK_PRIORITY;
 	Task_construct(&cmdRxTask, cmd_taskRxFxn, &taskParams, NULL);
 
@@ -461,6 +548,7 @@ void cmd_taskRxFxn(UArg a0, UArg a1)
  */
 void cmd_taskFxn(UArg a0, UArg a1)
 {
+	ICall_registerApp(&selfEntity, &sem);
 	for(;;){
 		Semaphore_pend(Semaphore_handle(&cmdCmdSem), UART_WAIT_FOREVER);
 		if(cmdRxBuf->count > 0){
@@ -511,33 +599,407 @@ void cmd_taskFxn(UArg a0, UArg a1)
 void cmd_hdlFxn(char *cmd)
 {
 	uint8_t i = 0;
-	for(i = 0; ;i++){
-		if(cmdTable[i].cmd != NULL){
-			if(strstr(cmd, cmdTable[i].cmd) != NULL){
-				if(cmdTable[i].handler != NULL){
-					cmdTable[i].handler(cmd);
-				}
-				break;
-			}
+	bool handled = false;
+
+	if(strstr(cmd, STR_REQ_AT) == cmd){//start with AT
+		if(strlen(cmd) == strlen(STR_REQ_HANDSHAKE)){//received only "AT"
+			cmd_write(STR_RES_OK, strlen(STR_RES_OK));
+			handled = true;
 		}
 		else{
-			break;
+			for(i = 0; ;i++){
+				if(cmdTable[i].cmd != NULL){
+					if(strstr(cmd, cmdTable[i].cmd) != NULL){
+						if(cmdTable[i].handler != NULL){
+							cmdTable[i].handler(i, cmd);
+							handled = true;
+						}
+						break;
+					}
+				}
+				else{
+					break;
+				}
+			}
 		}
+	}
+
+
+	if(!handled){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
 	}
 }
 
 /*********************************************************************
- * @fn      cmd_taskFxn
+ * @fn
  *
- * @brief   Application task entry point for the cmd.
+ * @brief
  *
- * @param   a0, a1 - not used.
+ * @param
  *
- * @return  None.
+ * @return
  */
-void cmd_onTest(char *cmd)
+cmdType_e cmd_getType(uint8_t idx, char *cmd)
 {
-	cmd_write(cmd, strlen(cmd));
+	char *p = strstr(cmd, cmdTable[idx].cmd);
+	p += strlen(cmdTable[idx].cmd);
+
+	if('?' == *p){
+		return CMD_GET;
+	}
+	else if('=' == *p){
+		if('?' == *(p + 1)){
+			return CMD_FORMAT;
+		}
+		else{
+			return CMD_SET;
+		}
+	}
+	else if('\r' == *p){
+		return CMD_SET;
+	}
+	else{
+		return CMD_UNKNOWN;
+	}
+}
+
+/*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+void cmd_onRestore(uint8_t idx, char *cmd)
+{
+	cmdType_e ct = cmd_getType(idx, cmd);
+	bool res = false;
+
+	if(CMD_GET == ct){
+
+	}
+	else if(CMD_FORMAT == ct){
+
+	}
+	else if(CMD_SET == ct){
+		res = (SUCCESS == CustNV_restore());
+		if(res){
+			cmd_write(STR_RES_OK, strlen(STR_RES_OK));
+		}
+	}
+	else{
+	}
+
+	if(!res){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
+	}
+}
+
+/*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+void cmd_onPin(uint8_t idx, char *cmd)
+{
+	cmdType_e ct = cmd_getType(idx, cmd);
+	bool res = false;
+
+	if(CMD_GET == ct){
+		char *pin = ICall_malloc(PIN_LEN + 1);
+		if(pin){
+			memset(pin, 0, PIN_LEN + 1);
+			res = (SUCCESS == CustNV_getPin(pin));
+			if(res){
+				Log_printf(STR_RES_PIN, pin);
+			}
+			ICall_free(pin);
+		}
+	}
+	else if(CMD_FORMAT == ct){
+		cmd_write(STR_FORMAT_PIN, strlen(STR_FORMAT_PIN));
+		res = true;
+	}
+	else if(CMD_SET == ct){
+		if(strlen(cmd) == STR_LEN_VALID_PIN){//11+PIN_LEN
+			char *pin = ICall_malloc(PIN_LEN + 1);
+			if(pin){
+				memset(pin, 0, PIN_LEN + 1);
+				if(sscanf(cmd, STR_SET_PIN, pin) > 0){
+					res = (SUCCESS == CustNV_setPin(pin));
+					if(res){
+						cmd_write(STR_RES_OK, strlen(STR_RES_OK));
+					}
+				}
+				ICall_free(pin);
+			}
+
+		}
+	}
+	else{
+	}
+
+	if(!res){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
+	}
+}
+
+/*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+void cmd_onTimeZone(uint8_t idx, char *cmd)
+{
+	cmdType_e ct = cmd_getType(idx, cmd);
+	bool res = false;
+
+	if(CMD_GET == ct){
+		int8_t tz = 0;
+		res = (SUCCESS == CustNV_getTimeZone(&tz));
+		if(res){
+			Log_printf(STR_RES_TIMEZONE, tz);
+		}
+	}
+	else if(CMD_FORMAT == ct){
+		cmd_write(STR_FORMAT_TIMEZONE, strlen(STR_FORMAT_TIMEZONE));
+		res = true;
+	}
+	else if(CMD_SET == ct){
+		int32_t tz = 0;
+		if(sscanf(cmd, STR_SET_TIMEZONE, &tz) > 0){
+			res = (SUCCESS == CustNV_setTimeZone((int8_t)tz));
+			if(res){
+				cmd_write(STR_RES_OK, strlen(STR_RES_OK));
+			}
+		}
+	}
+	else{
+	}
+
+	if(!res){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
+	}
+}
+
+/*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+void cmd_onMotorMode(uint8_t idx, char *cmd)
+{
+	cmdType_e ct = cmd_getType(idx, cmd);
+	bool res = false;
+
+	if(CMD_GET == ct){
+		uint8_t mode = 0;
+		res = (SUCCESS == CustNV_getMotorMode(&mode));
+		if(res){
+			Log_printf(STR_RES_MOTORMODE, mode);
+		}
+	}
+	else if(CMD_FORMAT == ct){
+		cmd_write(STR_FORMAT_MOTORMODE, strlen(STR_FORMAT_MOTORMODE));
+		res = true;
+	}
+	else if(CMD_SET == ct){
+		uint32_t mode = 0;
+		if(sscanf(cmd, STR_SET_MOTORMODE, &mode) > 0){
+			res = (SUCCESS == CustNV_setMotorMode((uint8_t)mode));
+			if(res){
+				cmd_write(STR_RES_OK, strlen(STR_RES_OK));
+			}
+		}
+	}
+	else{
+	}
+
+	if(!res){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
+	}
+}
+
+/*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+void cmd_onMotorTime(uint8_t idx, char *cmd)
+{
+	cmdType_e ct = cmd_getType(idx, cmd);
+	bool res = false;
+
+	if(CMD_GET == ct){
+		uint8_t time = 0;
+		res = (SUCCESS == CustNV_getMotorTime(&time));
+		if(res){
+			Log_printf(STR_RES_MOTORTIME, time);
+		}
+	}
+	else if(CMD_FORMAT == ct){
+		cmd_write(STR_FORMAT_MOTORTIME, strlen(STR_FORMAT_MOTORTIME));
+		res = true;
+	}
+	else if(CMD_SET == ct){
+		uint32_t time = 0;
+		if(sscanf(cmd, STR_SET_MOTORTIME, &time) > 0){
+			res = (SUCCESS == CustNV_setMotorTime((uint8_t)time));
+			if(res){
+				cmd_write(STR_RES_OK, strlen(STR_RES_OK));
+			}
+		}
+	}
+	else{
+	}
+
+	if(!res){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
+	}
+}
+
+/*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+void cmd_onOfficeMode(uint8_t idx, char *cmd)
+{
+	cmdType_e ct = cmd_getType(idx, cmd);
+	bool res = false;
+
+	if(CMD_GET == ct){
+		uint8_t mode = 0;
+		res = (SUCCESS == CustNV_getOfficeMode(&mode));
+		if(res){
+			Log_printf(STR_RES_OFFICEMODE, mode);
+		}
+	}
+	else if(CMD_FORMAT == ct){
+		cmd_write(STR_FORMAT_OFFICEMODE, strlen(STR_FORMAT_OFFICEMODE));
+		res = true;
+	}
+	else if(CMD_SET == ct){
+		uint32_t mode = 0;
+		if(sscanf(cmd, STR_SET_OFFICEMODE, &mode) > 0){
+			res = (SUCCESS == CustNV_setOfficeMode((uint8_t)mode));
+			if(res){
+				cmd_write(STR_RES_OK, strlen(STR_RES_OK));
+			}
+		}
+	}
+	else{
+	}
+
+	if(!res){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
+	}
+}
+
+/*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+void cmd_onOfficeTime(uint8_t idx, char *cmd)
+{
+	cmdType_e ct = cmd_getType(idx, cmd);
+	bool res = false;
+
+	if(CMD_GET == ct){
+		uint8_t time = 0;
+		res = (SUCCESS == CustNV_getOfficeTime(&time));
+		if(res){
+			Log_printf(STR_RES_OFFICETIME, time);
+		}
+	}
+	else if(CMD_FORMAT == ct){
+		cmd_write(STR_FORMAT_OFFICETIME, strlen(STR_FORMAT_OFFICETIME));
+		res = true;
+	}
+	else if(CMD_SET == ct){
+		uint32_t time = 0;
+		if(sscanf(cmd, STR_SET_OFFICETIME, &time) > 0){
+			res = (SUCCESS == CustNV_setOfficeTime((uint8_t)time));
+			if(res){
+				cmd_write(STR_RES_OK, strlen(STR_RES_OK));
+			}
+		}
+	}
+	else{
+	}
+
+	if(!res){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
+	}
+}
+
+/*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+void cmd_onHBInterval(uint8_t idx, char *cmd)
+{
+	cmdType_e ct = cmd_getType(idx, cmd);
+	bool res = false;
+
+	if(CMD_GET == ct){
+		uint8_t time = 0;
+		res = (SUCCESS == CustNV_getHBInterval(&time));
+		if(res){
+			Log_printf(STR_RES_HBINTERVAL, time);
+		}
+	}
+	else if(CMD_FORMAT == ct){
+		cmd_write(STR_FORMAT_HBINTERVAL, strlen(STR_FORMAT_HBINTERVAL));
+		res = true;
+	}
+	else if(CMD_SET == ct){
+		uint32_t time = 0;
+		if(sscanf(cmd, STR_SET_HBINTERVAL, &time) > 0){
+			res = (SUCCESS == CustNV_setHBInterval((uint8_t)time));
+			if(res){
+				cmd_write(STR_RES_OK, strlen(STR_RES_OK));
+			}
+		}
+	}
+	else{
+	}
+
+	if(!res){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
+	}
 }
 
 // -----------------------------------------------------------------------------

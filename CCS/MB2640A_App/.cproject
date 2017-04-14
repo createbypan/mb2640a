@@ -86,14 +86,15 @@
 									<listOptionValue builtIn="false" value="MB2640A"/>
 									<listOptionValue builtIn="false" value="POWER_SAVING"/>
 									<listOptionValue builtIn="false" value="SBP_TASK_STACK_SIZE=700"/>
-									<listOptionValue builtIn="false" value="CMD_TASK_STACK_SIZE=400"/>
+									<listOptionValue builtIn="false" value="CMD_TASK_STACK_SIZE=800"/>
+									<listOptionValue builtIn="false" value="CMD_RXTASK_STACK_SIZE=400"/>
 									<listOptionValue builtIn="false" value="GAPROLE_TASK_STACK_SIZE=520"/>
 									<listOptionValue builtIn="false" value="HEAPMGR_SIZE=2672"/>
 									<listOptionValue builtIn="false" value="MAX_PDU_SIZE=27"/>
 									<listOptionValue builtIn="false" value="xTI_DRIVERS_SPI_DMA_INCLUDED"/>
 									<listOptionValue builtIn="false" value="xTI_DRIVERS_LCD_INCLUDED"/>
 									<listOptionValue builtIn="false" value="ICALL_MAX_NUM_TASKS=5"/>
-									<listOptionValue builtIn="false" value="ICALL_MAX_NUM_ENTITIES=8"/>
+									<listOptionValue builtIn="false" value="ICALL_MAX_NUM_ENTITIES=7"/>
 									<listOptionValue builtIn="false" value="xdc_runtime_Assert_DISABLE_ALL"/>
 									<listOptionValue builtIn="false" value="xdc_runtime_Log_DISABLE_ALL"/>
 									<listOptionValue builtIn="false" value="MAX_NUM_BLE_CONNS=1"/>

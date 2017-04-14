@@ -35,6 +35,7 @@
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compilerID.ABI.1541589103" name="Application binary interface. [See 'General' page to edit] (--abi)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compilerID.ABI" value="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compilerID.ABI.eabi" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compilerID.DEFINE.704188850" name="Pre-define NAME (--define, -D)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compilerID.DEFINE" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="USE_ICALL"/>
+									<listOptionValue builtIn="false" value="OSAL_MAX_NUM_PROXY_TASKS=3"/>
 									<listOptionValue builtIn="false" value="OSAL_SNV=2"/>
 									<listOptionValue builtIn="false" value="FLASH_ROM_BUILD"/>
 									<listOptionValue builtIn="false" value="POWER_SAVING"/>

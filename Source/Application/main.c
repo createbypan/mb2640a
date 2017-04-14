@@ -97,9 +97,10 @@ int main()
     /* Kick off profile - Priority 3 */
     GAPRole_createTask();
 
-    Cmd_createTask();
+//    Cmd_createTask();
 
     SimpleBLEPeripheral_createTask();
+    Cmd_createTask();
 
 #ifdef FEATURE_OAD
     {

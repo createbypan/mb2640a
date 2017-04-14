@@ -370,6 +370,7 @@ static void SimpleBLEPeripheral_init(void)
   // Register the current thread as an ICall dispatcher application
   // so that the application can send and receive messages.
   ICall_registerApp(&selfEntity, &sem);
+  CustNV_init();
 
   // Hard code the BD Address till CC2650 board gets its own IEEE address
   //uint8 bdAddress[B_ADDR_LEN] = { 0xAD, 0xD0, 0x0A, 0xAD, 0xD0, 0x0A };
@@ -930,13 +931,11 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 
 			ICall_free(ownAddress);
         }
-
-        CustNV_init();
       }
       break;
 
     case GAPROLE_ADVERTISING:
-    	Log_write("+CONN: 1\r\n", strlen("+CONN: 1\r\n"), CMD_WRITE_WAIT);
+    	Log_writeStr("+CONN: 1\r\n");
       //PANMIN
 //      LCD_WRITE_STRING("Advertising", LCD_PAGE2);
       //PANMIN-END
@@ -972,7 +971,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 
     case GAPROLE_CONNECTED:
       {
-    	Log_write("+CONN: 2\r\n", strlen("+CONN: 2\r\n"), CMD_WRITE_WAIT);
+    	Log_writeStr("+CONN: 2\r\n");
 
         uint8_t peerAddress[B_ADDR_LEN];
 
@@ -1014,7 +1013,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
       break;
 
     case GAPROLE_WAITING:
-      Log_write("+CONN: 0\r\n", strlen("+CONN: 0\r\n"), CMD_WRITE_WAIT);
+      Log_writeStr("+CONN: 0\r\n");
       //PANMIN
 //      Util_stopClock(&periodicClock);
       //PANMIN-END

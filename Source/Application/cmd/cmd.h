@@ -29,7 +29,6 @@ extern "C"
 /*********************************************************************
  * MACROS
  */
-#define CMD_WRITE_WAIT 500
 
 /*********************************************************************
  * FUNCTIONS
@@ -37,7 +36,10 @@ extern "C"
 /*
  *
  */
-extern int Log_write(const void *buffer, size_t size, UInt32 timeout);
+#if (GL_LOG)
+extern int Log_writeStr(const char *buffer);
+extern int Log_printf(const char *fmt, ...);
+#endif
 
 /*
  * Task creation function for the cmd.

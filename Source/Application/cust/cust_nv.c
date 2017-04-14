@@ -6,14 +6,25 @@
 #include "string.h"
 #include "stdbool.h"
 #include "mb2640a_util.h"
+#include "cust_nv.h"
+
+#if (GL_LOG)
+#include "cmd.h"
+#endif
 /******************************************************************************
  Macro Definition
 *******************************************************************************/
-#define CUST_NV_SIZE (BLE_NVID_CUST_END - BLE_NVID_CUST_START + 1)
+#define LOG FALSE
 
-#define PIN_LEN 4
+#define CUST_NV_ID BLE_NVID_CUST_START
+#define CUST_NV_SIZE 16//max 252B for each ID
+
 #define DEFAULT_PIN "1662"
 #define DEFAULT_TIMEZONE 8
+
+#define NV_SECT_2 2//(PIN_LEN / 2)
+#define NV_SECT_3 3//(NV_SECT_2 + 1)
+#define NV_SECT_4 4//(NV_SECT_3 +　1)
 
 #define CNV_ENGMODE_MASK 0x80
 #define CNV_DATAMODE_MASK 0x60
@@ -33,24 +44,6 @@
 /******************************************************************************
  Local CONST Definition
 *******************************************************************************/
-typedef enum{
-	DATAMODE_CMD = 0,
-	DATAMODE_TRANSFER,
-	DATAMODE_SILENT
-} dataMode_e;
-
-typedef enum{
-	MOTORMODE_A = 0,
-	MOTORMODE_B
-} motorMode_e;
-
-typedef enum{
-	HBINTERVAL_30MIN = 0,
-	HBINTERVAL_60MIN,
-	HBINTERVAL_90MIN,
-	HBINTERVAL_120MIN
-} hbInterval_e;
-
 typedef struct{
 	uint8_t pin[PIN_LEN];
 	bool engMode;
@@ -58,7 +51,7 @@ typedef struct{
 	uint8_t timeZone;
 	motorMode_e motorMode;
 	uint8_t motorDrvTime;
-	bool officeMode;
+	officeMode_e officeMode;
 	uint8_t officeTime;
 	hbInterval_e hbInterval;
 } custNV_t;
@@ -102,16 +95,14 @@ void CustNV_init(void)
 	uint8_t res = 0;
 	uint8_t crc8 = 0;
 
-	res = osal_snv_read(BLE_NVID_CUST_START, CUST_NV_SIZE, (uint8_t *)custNV);
+	res = osal_snv_read(CUST_NV_ID, CUST_NV_SIZE, custNV);
 	if(res != SUCCESS){//if never been written
-		para_restore(custNV, &custParas);
-		osal_snv_write(BLE_NVID_CUST_START, CUST_NV_SIZE, (uint8_t *)custNV);
+		CustNV_restore();
 	}
 
 	crc8 = Util_crc8(custNV, CUST_NV_SIZE - 1);/*crc8 check*/
 	if(crc8 != custNV[CUST_NV_SIZE - 1]){//if data corrupted
-		para_restore(custNV, &custParas);
-		osal_snv_write(BLE_NVID_CUST_START, CUST_NV_SIZE, (uint8_t *)custNV);
+		CustNV_restore();
 	}
 	para_read(custNV, &custParas);
 }
@@ -130,11 +121,16 @@ uint8_t CustNV_restore(void)
 {
 	uint8_t res = FAILURE;
 
-	res = para_restore(custNV, &custParas);
+#if (GL_LOG && LOG)
+	Log_writeStr("CUST NV RESTORE\r\n");
+#endif
+	res = para_restore(custNV, &custParas) |
+			osal_snv_write(CUST_NV_ID, CUST_NV_SIZE, custNV);
+#if (GL_LOG && LOG)
 	if(res != SUCCESS){
-		return FAILURE;
+		Log_printf("CUST NV RESTORE FAIL: %d\r\n", res);
 	}
-	res = osal_snv_write(BLE_NVID_CUST_START, CUST_NV_SIZE, (uint8_t *)custNV);
+#endif
 
 	return res;
 }
@@ -153,13 +149,297 @@ uint8_t CustNV_save(void)
 {
 	uint8_t res = FAILURE;
 
+#if (GL_LOG && LOG)
+	Log_writeStr("CUST NV SAVE\r\n");
+#endif
 	res = para_write(custNV, &custParas);
-	if(res != SUCCESS){
-		return FAILURE;
+	if(SUCCESS == res){
+		res = osal_snv_write(CUST_NV_ID, CUST_NV_SIZE, custNV);
 	}
-	res = osal_snv_write(BLE_NVID_CUST_START, CUST_NV_SIZE, (uint8_t *)custNV);
+#if (GL_LOG && LOG)
+	if(res != SUCCESS){
+		Log_printf("CUST NV SAVE FAIL: %d\r\n", res);
+	}
+#endif
 
 	return res;
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_getPin(char *pin)
+{
+	uint8_t i = 0;
+
+	for(i=0; i<PIN_LEN; i++){
+		pin[i] = custParas.pin[i];
+	}
+	pin[i] = '\0';
+
+	return SUCCESS;
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_setPin(char *pin)
+{
+	uint8_t i = 0;
+
+	for(i=0; i<PIN_LEN; i++){
+		custParas.pin[i] = pin[i];
+	}
+
+	return CustNV_save();
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_getTimeZone(int8_t *tz)
+{
+	if(custParas.timeZone & 0xF0){
+		*tz = (custParas.timeZone & 0x0F) * (-1);
+	}
+	else{
+		*tz = custParas.timeZone;
+	}
+
+	return SUCCESS;
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_setTimeZone(int8_t tz)
+{
+	if(!((tz >= -12) && (tz <= 12))){
+		return FAILURE;
+	}
+
+	if(tz < 0){
+		custParas.timeZone = tz * (-1);
+		custParas.timeZone |= 0xF0;
+	}
+	else{
+		custParas.timeZone = tz;
+	}
+
+	return CustNV_save();
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_getMotorMode(uint8_t *mode)
+{
+	*mode = (uint8_t)custParas.motorMode;
+
+	return SUCCESS;
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_setMotorMode(uint8_t mode)
+{
+	if((mode != 0) && (mode != 1)){
+		return FAILURE;
+	}
+	custParas.motorMode = (motorMode_e)mode;
+
+	return CustNV_save();
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_getMotorTime(uint8_t *time)
+{
+	*time = custParas.motorDrvTime;
+
+	return SUCCESS;
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_setMotorTime(uint8_t time)
+{
+	if(!((time >= 4) && (time <= 127))){
+		return FAILURE;
+	}
+	custParas.motorDrvTime = time;
+
+	return CustNV_save();
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_getOfficeMode(uint8_t *mode)
+{
+	*mode = (uint8_t)custParas.officeMode;
+
+	return SUCCESS;
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_setOfficeMode(uint8_t mode)
+{
+	if((mode != 0) && (mode != 1)){
+		return FAILURE;
+	}
+	custParas.officeMode = (officeMode_e)mode;
+
+	return CustNV_save();
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_getOfficeTime(uint8_t *time)
+{
+	*time = custParas.officeTime;
+
+	return SUCCESS;
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_setOfficeTime(uint8_t time)
+{
+	if(!((time >= 2) && (time <= 7))){
+		return FAILURE;
+	}
+	custParas.officeTime = time;
+
+	return CustNV_save();
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_getHBInterval(uint8_t *time)
+{
+	*time = custParas.hbInterval;
+
+	return SUCCESS;
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_setHBInterval(uint8_t time)
+{
+	if(time > 3){
+		return FAILURE;
+	}
+	custParas.hbInterval = time;
+
+	return CustNV_save();
 }
 
 /*********************************************************************
@@ -219,8 +499,8 @@ uint8_t pin_decompress(uint8_t *src, size_t src_len, uint8_t *dst, size_t *dst_l
 	*dst_len = 0;
 
 	for(i=0; i<src_len; i++){
-		dst[i * 2] = (src[i] & 0xF0) >> 4;
-		dst[i * 2 + 1] = src[i] & 0x0F;
+		dst[i * 2] = ((src[i] & 0xF0) >> 4) + 0x30;
+		dst[i * 2 + 1] = (src[i] & 0x0F) + 0x30;
 		(*dst_len) += 2;
 	}
 	if(0x0F == dst[*dst_len - 1]){
@@ -263,7 +543,7 @@ uint8_t para_restore(uint8_t *data, custNV_t *paras)
 	paras->timeZone = DEFAULT_TIMEZONE;
 	paras->motorMode = MOTORMODE_A;
 	paras->motorDrvTime = MIN_MOTORDRVTIME;
-	paras->officeMode = false;
+	paras->officeMode = OFFICEMODE_DEACTIVATED;
 	paras->officeTime = MIN_OFFICETIME;
 	paras->hbInterval = HBINTERVAL_60MIN;
 	res = para_write(data, paras);
@@ -301,17 +581,20 @@ uint8_t para_write(uint8_t *data, custNV_t *paras)
 	if(paras->hbInterval > HBINTERVAL_120MIN){
 		return FAILURE;
 	}
+	if(!((paras->timeZone <= 12) || ((paras->timeZone >= 0xF1) && (paras->timeZone <= 0xFC)))){
+		return FAILURE;
+	}
 
 	res = pin_compress(paras->pin, PIN_LEN, data, &len);
 	if(SUCCESS != res){
 		return FAILURE;
 	}
-	data[2] = ((((uint8_t)paras->engMode) << 7) & CNV_ENGMODE_MASK) |
+	data[NV_SECT_2] = ((((uint8_t)paras->engMode) << 7) & CNV_ENGMODE_MASK) |
 			((((uint8_t)paras->dataMode) << 5) & CNV_DATAMODE_MASK) |
 			(paras->timeZone & CNV_TIMEZONE_MASK);
-	data[3] = ((((uint8_t)paras->motorMode) << 7) & CNV_MOTORMODE_MASK) |
+	data[NV_SECT_3] = ((((uint8_t)paras->motorMode) << 7) & CNV_MOTORMODE_MASK) |
 			(paras->motorDrvTime & CNV_MOTORDRVTIME_MASK);
-	data[4] = ((((uint8_t)paras->officeMode) << 7) & CNV_OFFICEMODE_MASK) |
+	data[NV_SECT_4] = ((((uint8_t)paras->officeMode) << 7) & CNV_OFFICEMODE_MASK) |
 			((((uint8_t)paras->officeTime) << 4) & CNV_OFFICETIME_MASK) |
 			((((uint8_t)paras->hbInterval) << 2) & CNV_HBINTERVAL_MASK);
 	data[CUST_NV_SIZE - 1] = Util_crc8(data, CUST_NV_SIZE - 1);
@@ -341,27 +624,30 @@ uint8_t para_read(uint8_t *data, custNV_t *paras)
 	}
 
 	//engineer mode context
-	paras->engMode = (bool)((data[2] & CNV_ENGMODE_MASK) >> 7);
+	paras->engMode = (bool)((data[NV_SECT_2] & CNV_ENGMODE_MASK) >> 7);
 
 	//data mode
-	value = (data[2] & CNV_DATAMODE_MASK) >> 5;
+	value = (data[NV_SECT_2] & CNV_DATAMODE_MASK) >> 5;
 	if(value > (uint8_t)DATAMODE_SILENT){
 		return FAILURE;
 	}
 	paras->dataMode = (dataMode_e)(value);
 
 	//time zone
-	paras->timeZone = data[2] & CNV_TIMEZONE_MASK;
+	paras->timeZone = data[NV_SECT_2] & CNV_TIMEZONE_MASK;
+	if(paras->timeZone & CNV_TIMEZONE_SIGN_MASK){
+		paras->timeZone |= 0xF0;
+	}
 
 	//motor I/O direction
-	value = (data[3] & CNV_MOTORMODE_MASK) >> 7;
+	value = (data[NV_SECT_3] & CNV_MOTORMODE_MASK) >> 7;
 	if(value > (uint8_t)MOTORMODE_B){
 		return FAILURE;
 	}
 	paras->motorMode = (motorMode_e)(value);
 
 	//motor drive time
-	value = data[3] & CNV_MOTORDRVTIME_MASK;
+	value = data[NV_SECT_3] & CNV_MOTORDRVTIME_MASK;
 	if(value < MIN_MOTORDRVTIME){
 		return FAILURE;
 	}
@@ -371,10 +657,10 @@ uint8_t para_read(uint8_t *data, custNV_t *paras)
 	paras->motorDrvTime = value;
 
 	//office mode
-	paras->officeMode = (bool)((data[4] & CNV_OFFICEMODE_MASK) >> 7);
+	paras->officeMode = (officeMode_e)((data[NV_SECT_4] & CNV_OFFICEMODE_MASK) >> 7);
 
 	//office mode time
-	value = (data[4] & CNV_OFFICETIME_MASK) >> 4;
+	value = (data[NV_SECT_4] & CNV_OFFICETIME_MASK) >> 4;
 	if(value < MIN_OFFICETIME){
 		return FAILURE;
 	}
@@ -384,7 +670,7 @@ uint8_t para_read(uint8_t *data, custNV_t *paras)
 	paras->officeTime = value;
 
 	//heart beat interval
-	value = (data[4] & CNV_HBINTERVAL_MASK) >> 2;
+	value = (data[NV_SECT_4] & CNV_HBINTERVAL_MASK) >> 2;
 	if(value > (uint8_t)HBINTERVAL_120MIN){
 		return FAILURE;
 	}
