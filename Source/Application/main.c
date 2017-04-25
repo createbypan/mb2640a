@@ -42,7 +42,7 @@
 #include "ICall.h"
 #include "bcomdef.h"
 #include "peripheral.h"
-#include "MB2640A.h"
+#include "mb2640a.h"
 #include "cmd.h"
 
 /* Header files required to enable instruction fetch cache */
@@ -80,27 +80,26 @@ extern uint32_t ti_sysbios_family_arm_m3_Hwi_resetVectors;
  */
 int main()
 {
-    PIN_init(BoardGpioInitTable);
+  PIN_init(BoardGpioInitTable);
 
 #ifndef POWER_SAVING
     /* Set constraints for Standby, powerdown and idle mode */
     Power_setConstraint(Power_SB_DISALLOW);
     Power_setConstraint(Power_IDLE_PD_DISALLOW);
 #endif // POWER_SAVING
-
+    
     /* Initialize ICall module */
     ICall_init();
 
     /* Start tasks of external images - Priority 5 */
     ICall_createRemoteTasks();
-
+    
     /* Kick off profile - Priority 3 */
     GAPRole_createTask();
-
-//    Cmd_createTask();
+    
+    Cmd_createTask();
 
     SimpleBLEPeripheral_createTask();
-    Cmd_createTask();
 
 #ifdef FEATURE_OAD
     {
@@ -111,7 +110,7 @@ int main()
 #elif defined(__TI_COMPILER_VERSION__)
       uint32_t *flashVectors = &ti_sysbios_family_arm_m3_Hwi_resetVectors;
 #endif //Compiler.
-
+      
       // Write image specific interrupt vectors into RAM vector table.
       for(counter = 0; counter < 15; ++counter)
       {
@@ -119,7 +118,7 @@ int main()
       }
     }
 #endif //FEATURE_OAD
-
+    
     /* enable interrupts and start SYS/BIOS */
     BIOS_start();
     

@@ -13,7 +13,7 @@ extern "C"
 |- - - - - - - -| PIN(compressed 4B)
 
 |-                Engineer Mode(0 - 1)
- - -              Data Mode(0 - 3)
+ - -              Data Mode(0 - 2)
  - - - - -|       Time Zone(0 - 1, 0 - 12)
 
 |-                Motor I/O Definition(0 - 1)
@@ -70,10 +70,22 @@ typedef enum{
 	HBINTERVAL_90MIN,
 	HBINTERVAL_120MIN
 } hbInterval_e;
+
+typedef struct{
+	uint8_t pin[PIN_LEN];
+	bool engMode;
+	dataMode_e dataMode;
+	uint8_t timeZone;
+	motorMode_e motorMode;
+	uint8_t motorDrvTime;
+	officeMode_e officeMode;
+	uint8_t officeTime;
+	hbInterval_e hbInterval;
+} custNV_t;
 /******************************************************************************
  External Variable Definition
 *******************************************************************************/
-
+extern custNV_t custParas;
 /******************************************************************************
  External Function Definition
 *******************************************************************************/
@@ -82,6 +94,8 @@ extern uint8_t CustNV_restore(void);
 extern uint8_t CustNV_save(void);
 extern uint8_t CustNV_getPin(char *pin);
 extern uint8_t CustNV_setPin(char *pin);
+extern uint8_t CustNV_getDatamode(uint8_t *dm);
+extern uint8_t CustNV_setDatamode(uint8_t dm);
 extern uint8_t CustNV_getTimeZone(int8_t *tz);
 extern uint8_t CustNV_setTimeZone(int8_t tz);
 extern uint8_t CustNV_getMotorMode(uint8_t *mode);

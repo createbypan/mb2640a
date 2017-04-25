@@ -19,11 +19,11 @@
 #include "gatt.h"
 #include "gapgattserver.h"
 #include "gattservapp.h"
-#include "devinfoservice.h"
 //PANMIN
 //#include "simpleGATTprofile.h"
 //PANMIN-END
 //PANMIN
+#include "doorlockservice.h"
 #include "gatt_profile_uuid.h"
 //PANMIN-END
 
@@ -58,7 +58,7 @@
  * CONSTANTS
  */
 // Advertising interval when device is discoverable (units of 625us, 160=100ms)
-#define DEFAULT_ADVERTISING_INTERVAL          1600//160
+#define DEFAULT_ADVERTISING_INTERVAL          160//1600//160
 
 // Advertising on period when device is discoverable (units of 1s)
 #define DEFAULT_ADVERTISING_ON_TIME           5
@@ -122,11 +122,11 @@
 
 // Internal Events for RTOS application
 #define SBP_STATE_CHANGE_EVT                  0x0001
+#define SBP_CHAR_CHANGE_EVT                   0x0002
 //PANMIN
-//#define SBP_CHAR_CHANGE_EVT                   0x0002
 //#define SBP_PERIODIC_EVT                      0x0002
 //PANMIN-END
-#define SBP_CONN_EVT_END_EVT                  0x0002//0x0008
+#define SBP_CONN_EVT_END_EVT                  0x0004//0x0008
 
 #define SCANRSPDATA_ADDR_LEN 6
 
@@ -244,8 +244,8 @@ static uint8_t advertData[] =
   //PANMIN-END
 
   //PANMIN
-  LO_UINT16(DEVINFO_SERV_UUID),
-  HI_UINT16(DEVINFO_SERV_UUID)
+  LO_UINT16(DOORLOCK_SERV_UUID),
+  HI_UINT16(DOORLOCK_SERV_UUID),
   //PANMIN-END
 };
 
@@ -266,8 +266,8 @@ static uint8_t SimpleBLEPeripheral_processStackMsg(ICall_Hdr *pMsg);
 static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg);
 static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg);
 static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState);
+static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID);
 //PANMIN
-//static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID);
 //static void SimpleBLEPeripheral_performPeriodicTask(void);
 //PANMIN-END
 
@@ -307,15 +307,13 @@ static gapBondCBs_t simpleBLEPeripheral_BondMgrCBs =
   NULL  // Pairing / Bonding state Callback (not used by application)
 };
 
-//PANMIN
-// Simple GATT Profile Callbacks
-//#ifndef FEATURE_OAD
-//static simpleProfileCBs_t SimpleBLEPeripheral_simpleProfileCBs =
-//{
-//  SimpleBLEPeripheral_charValueChangeCB // Characteristic value change callback
-//};
-//#endif //!FEATURE_OAD
-//PANMIN-END
+#ifndef FEATURE_OAD
+static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID);
+static doorLockCBs_t SimpleBLEPeripheral_doorLockCBs =
+{
+  SimpleBLEPeripheral_charValueChangeCB // Characteristic value change callback
+};
+#endif //FEATURE_OAD
 
 #ifdef FEATURE_OAD
 static oadTargetCBs_t simpleBLEPeripheral_oadCBs =
@@ -473,13 +471,7 @@ static void SimpleBLEPeripheral_init(void)
    // Initialize GATT attributes
   GGS_AddService(GATT_ALL_SERVICES);           // GAP
   GATTServApp_AddService(GATT_ALL_SERVICES);   // GATT attributes
-  DevInfo_AddService();                        // Device Information Service
-
-  //PANMIN
-//#ifndef FEATURE_OAD
-//  SimpleProfile_AddService(GATT_ALL_SERVICES); // Simple GATT Profile
-//#endif //!FEATURE_OAD
-  //PANMIN-END
+  DoorLock_AddService();
 
 #ifdef FEATURE_OAD
   VOID OAD_addService();                 // OAD Profile
@@ -493,30 +485,10 @@ static void SimpleBLEPeripheral_init(void)
   
 
   //PANMIN
-//#ifndef FEATURE_OAD
-//  // Setup the SimpleProfile Characteristic Values
-//  {
-//    uint8_t charValue1 = 1;
-//    uint8_t charValue2 = 2;
-//    uint8_t charValue3 = 3;
-//    uint8_t charValue4 = 4;
-//    uint8_t charValue5[SIMPLEPROFILE_CHAR5_LEN] = { 1, 2, 3, 4, 5 };
-//
-//    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR1, sizeof(uint8_t),
-//                               &charValue1);
-//    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR2, sizeof(uint8_t),
-//                               &charValue2);
-//    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR3, sizeof(uint8_t),
-//                               &charValue3);
-//    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
-//                               &charValue4);
-//    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR5, SIMPLEPROFILE_CHAR5_LEN,
-//                               charValue5);
-//  }
-//
-//  // Register callback with SimpleGATTprofile
-//  SimpleProfile_RegisterAppCBs(&SimpleBLEPeripheral_simpleProfileCBs);
-//#endif //!FEATURE_OAD
+#ifndef FEATURE_OAD
+  // Register callback with doorlockservice
+  DoorLock_RegisterAppCBs(&SimpleBLEPeripheral_doorLockCBs);
+#endif //!FEATURE_OAD
   //PANMIN-END
 
   // Start the Device
@@ -836,11 +808,9 @@ static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg)
       SimpleBLEPeripheral_processStateChangeEvt((gaprole_States_t)pMsg->
                                                 hdr.state);
       break;
-    //PANMIN
-//    case SBP_CHAR_CHANGE_EVT:
-//      SimpleBLEPeripheral_processCharValueChangeEvt(pMsg->hdr.state);
-//      break;
-    //PANMIN-END
+    case SBP_CHAR_CHANGE_EVT:
+      SimpleBLEPeripheral_processCharValueChangeEvt(pMsg->hdr.state);
+      break;
 
     default:
       // Do nothing.
@@ -882,27 +852,9 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
     case GAPROLE_STARTED:
       {
         uint8_t *ownAddress = (uint8_t *)ICall_malloc(B_ADDR_LEN);
-        uint8_t *systemId = (uint8_t *)ICall_malloc(DEVINFO_SYSTEM_ID_LEN);
 
-        if((ownAddress != NULL) && (systemId != NULL)){
+        if(ownAddress != NULL){
         	GAPRole_GetParameter(GAPROLE_BD_ADDR, ownAddress);
-
-			// use 6 bytes of device address for 8 bytes of system ID value
-			systemId[0] = ownAddress[0];
-			systemId[1] = ownAddress[1];
-			systemId[2] = ownAddress[2];
-
-			// set middle bytes to zero
-			systemId[4] = 0x00;
-			systemId[3] = 0x00;
-
-			// shift three bytes up
-			systemId[7] = ownAddress[5];
-			systemId[6] = ownAddress[4];
-			systemId[5] = ownAddress[3];
-
-			DevInfo_SetParameter(DEVINFO_SYSTEM_ID, DEVINFO_SYSTEM_ID_LEN, systemId);
-			ICall_free(systemId);
 
 			//set device name in scan rsp data
 			uint8_t *hexChar = NULL;
@@ -1056,24 +1008,22 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
   //gapProfileState = newState;
 }
 
-//PANMIN
-//#ifndef FEATURE_OAD
-///*********************************************************************
-// * @fn      SimpleBLEPeripheral_charValueChangeCB
-// *
-// * @brief   Callback from Simple Profile indicating a characteristic
-// *          value change.
-// *
-// * @param   paramID - parameter ID of the value that was changed.
-// *
-// * @return  None.
-// */
-//static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID)
-//{
-//  SimpleBLEPeripheral_enqueueMsg(SBP_CHAR_CHANGE_EVT, paramID);
-//}
-//#endif //!FEATURE_OAD
-//PANMIN-END
+#ifndef FEATURE_OAD
+/*********************************************************************
+ * @fn      SimpleBLEPeripheral_charValueChangeCB
+ *
+ * @brief   Callback from Simple Profile indicating a characteristic
+ *          value change.
+ *
+ * @param   paramID - parameter ID of the value that was changed.
+ *
+ * @return  None.
+ */
+static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID)
+{
+  SimpleBLEPeripheral_enqueueMsg(SBP_CHAR_CHANGE_EVT, paramID);
+}
+#endif //!FEATURE_OAD
 
 /*********************************************************************
  * @fn      SimpleBLEPeripheral_processCharValueChangeEvt
@@ -1085,33 +1035,16 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
  *
  * @return  None.
  */
-//PANMIN
-//static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID)
-//{
-//#ifndef FEATURE_OAD
-//  uint8_t newValue;
-//
-//  switch(paramID)
-//  {
-//    case SIMPLEPROFILE_CHAR1:
-//      SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR1, &newValue);
-//
-//      LCD_WRITE_STRING_VALUE("Char 1:", (uint16_t)newValue, 10, LCD_PAGE4);
-//      break;
-//
-//    case SIMPLEPROFILE_CHAR3:
-//      SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &newValue);
-//
-//      LCD_WRITE_STRING_VALUE("Char 3:", (uint16_t)newValue, 10, LCD_PAGE4);
-//      break;
-//
-//    default:
-//      // should not reach here!
-//      break;
-//  }
-//#endif //!FEATURE_OAD
-//}
-//PANMIN-END
+static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID)
+{
+#ifndef FEATURE_OAD
+	if(CustNV_save() == SUCCESS){
+#if (GL_LOG)
+		Cmd_onValueChanged(paramID);
+#endif
+	}
+#endif //!FEATURE_OAD
+}
 
 /*********************************************************************
  * @fn      SimpleBLEPeripheral_performPeriodicTask

@@ -125,8 +125,10 @@ S64_DEPS__QUOTED :=
 SUBDIRS := \
 Application/CMD \
 Application/Cust \
+Application/Doorlock \
 Application \
 Application/Ringbuff \
+Drivers/I2C \
 Drivers/PIN \
 Drivers/UART \
 ICall \

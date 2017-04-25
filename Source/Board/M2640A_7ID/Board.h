@@ -82,8 +82,11 @@ extern PIN_Config BoardGpioInitTable[];
 #define Board_UART_TX                       IOID_3          /* RF1.9  */
 //#define Board_UART_CTS                      IOID_0          /* RF1.3  */
 //#define Board_UART_RTS                      IOID_21         /* RF2.18 */
-#define Board_MRDY_PIN                       IOID_5
-#define Board_SRDY_PIN                       IOID_6
+#define Board_MRDY_PIN                       IOID_0
+#define Board_SRDY_PIN                       IOID_1
+#define Board_I2C_SDA                       IOID_5
+#define Board_I2C_SCK                       IOID_6
+#define Board_TP_INT                        IOID_4
 /* SPI Board */
 /* I2C */
 

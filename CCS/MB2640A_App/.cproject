@@ -51,6 +51,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/cmd&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/ringbuff&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/cust&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/doorlock&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Common&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board/M2640A_7ID&quot;"/>
@@ -60,9 +61,6 @@
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/Profiles/Roles/CC26xx&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/Profiles/Roles&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/Profiles/DevInfo&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/Profiles/SimpleProfile/CC26xx&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/Profiles/SimpleProfile&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/common/cc26xx&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/applib/heap&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/ble/hci&quot;"/>
@@ -85,7 +83,7 @@
 									<listOptionValue builtIn="false" value="GL_LOG=TRUE"/>
 									<listOptionValue builtIn="false" value="MB2640A"/>
 									<listOptionValue builtIn="false" value="POWER_SAVING"/>
-									<listOptionValue builtIn="false" value="SBP_TASK_STACK_SIZE=700"/>
+									<listOptionValue builtIn="false" value="SBP_TASK_STACK_SIZE=800"/>
 									<listOptionValue builtIn="false" value="CMD_TASK_STACK_SIZE=800"/>
 									<listOptionValue builtIn="false" value="CMD_RXTASK_STACK_SIZE=400"/>
 									<listOptionValue builtIn="false" value="GAPROLE_TASK_STACK_SIZE=520"/>
@@ -165,7 +163,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="PROFILES/simplekeys.h|Drivers/SPI/SPI.c|PROFILES/oad.c|TOOLS/cc26xx_ble_app_oad.cmd|Application/board_lcd.c|Drivers/LCD/LCDDogm1286.c|Board|Drivers/UDMA/UDMACC26XX.c|cc26x0f128.cmd|Startup/ST|Drivers/LCD/LCDDogm1286_util.c|PROFILES/oad_target_externalFlash.c|Drivers/SPI/SPICC26XXDMA.c|PROFILES/simplekeys.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="PROFILES/simplekeys.h|Drivers/SPI/SPI.c|PROFILES/oad.c|TOOLS/cc26xx_ble_app_oad.cmd|Application/board_lcd.c|Board|cc26x0f128.cmd|Startup/ST|PROFILES/oad_target_externalFlash.c|Drivers/SPI/SPICC26XXDMA.c|PROFILES/simplekeys.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

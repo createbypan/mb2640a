@@ -29,12 +29,13 @@
 #include "ringbuff.h"
 #include "cmd.h"
 #include "cust_nv.h"
+#include "doorlockservice.h"
 
 /*********************************************************************
  * CONSTANTS
  */
 #define LOG FALSE
-#define LOG_WRITE_WAIT UART_WAIT_FOREVER
+#define LOG_WRITE_WAIT 500//UART_WAIT_FOREVER
 
 // Task stack size
 #ifndef CMD_TASK_STACK_SIZE
@@ -72,6 +73,9 @@
 #define STR_SET_PIN "AT+PIN=\"%[^\"]\"\r\n"
 #define STR_RES_PIN "+PIN=\"%s\"\r\n"
 #define STR_FORMAT_PIN "AT+PIN=\"\"\r\n"
+#define STR_SET_DATAMODE "AT+DATAMODE=%d\r\n"
+#define STR_RES_DATAMODE "+DATAMODE=%d\r\n"
+#define STR_FORMAT_DATAMODE "AT+DATAMODE=(0,1,2)\r\n"
 #define STR_SET_TIMEZONE "AT+TIMEZONE=%d\r\n"
 #define STR_RES_TIMEZONE "+TIMEZONE=%d\r\n"
 #define STR_FORMAT_TIMEZONE "AT+TIMEZONE=(-12 - 12)\r\n"
@@ -90,6 +94,10 @@
 #define STR_SET_HBINTERVAL "AT+HBINTERVAL=%d\r\n"
 #define STR_RES_HBINTERVAL "+HBINTERVAL=%d\r\n"
 #define STR_FORMAT_HBINTERVAL "AT+HBINTERVAL=(0 - 3)\r\n"
+
+#define STR_RES_VERSION "+VERSION=%d.%d.%d\r\n"
+#define STR_RES_MODELNO "+MODELNO=%s\r\n"
+#define STR_RES_MODELDESC "+MODELDESC=%s\r\n"
 
 #define STR_RES_OK "OK\r\n"
 #define STR_RES_ERROR "ERROR\r\n"
@@ -196,12 +204,16 @@ static void cmd_hdlFxn(char *cmd);
 static cmdType_e cmd_getType(uint8_t idx, char *cmd);
 static void cmd_onRestore(uint8_t idx, char *cmd);
 static void cmd_onPin(uint8_t idx, char *cmd);
+static void cmd_onDataMode(uint8_t idx, char *cmd);
 static void cmd_onTimeZone(uint8_t idx, char *cmd);
 static void cmd_onMotorMode(uint8_t idx, char *cmd);
 static void cmd_onMotorTime(uint8_t idx, char *cmd);
 static void cmd_onOfficeMode(uint8_t idx, char *cmd);
 static void cmd_onOfficeTime(uint8_t idx, char *cmd);
 static void cmd_onHBInterval(uint8_t idx, char *cmd);
+static void cmd_onVersion(uint8_t idx, char *cmd);
+static void cmd_onModelNumber(uint8_t idx, char *cmd);
+static void cmd_onModelDesc(uint8_t idx, char *cmd);
 
 #ifdef POWER_SAVING
 //! \brief HWI interrupt function for remRdy
@@ -217,12 +229,16 @@ static cmdTable_t cmdTable[] =
 {
 	{"+RESTORE", cmd_onRestore},
 	{"+PIN", cmd_onPin},
+	{"+DATAMODE", cmd_onDataMode},
 	{"+TIMEZONE", cmd_onTimeZone},
 	{"+MOTORMODE", cmd_onMotorMode},
 	{"+MOTORTIME", cmd_onMotorTime},
 	{"+OFFICEMODE", cmd_onOfficeMode},
 	{"+OFFICETIME", cmd_onOfficeTime},
 	{"+HBINTERVAL", cmd_onHBInterval},
+	{"+VERSION", cmd_onVersion},
+	{"+MODELNO", cmd_onModelNumber},
+	{"+MODELDESC", cmd_onModelDesc},
 	{NULL, NULL}
 };
 
@@ -588,6 +604,96 @@ void cmd_taskFxn(UArg a0, UArg a1)
 }
 
 /*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+#if (GL_LOG)
+void Cmd_onValueChanged(uint8_t param)
+{
+	bool res = false;
+	switch(param){
+	case DOORLOCK_PIN:{
+		char *pin = ICall_malloc(PIN_LEN + 1);
+		if(pin){
+			memset(pin, 0, PIN_LEN + 1);
+			res = (SUCCESS == CustNV_getPin(pin));
+			if(res){
+				Log_printf(STR_RES_PIN, pin);
+			}
+			ICall_free(pin);
+		}
+		break;
+	}
+	case DOORLOCK_PARA:{
+//	case DOORLOCK_DM:{
+		uint8_t dm = 0;
+		res = (SUCCESS == CustNV_getDatamode(&dm));
+		if(res){
+			Log_printf(STR_RES_DATAMODE, dm);
+		}
+//		break;
+//	}
+//	case DOORLOCK_TZ:{
+		int8_t tz = 0;
+		res = (SUCCESS == CustNV_getTimeZone(&tz));
+		if(res){
+			Log_printf(STR_RES_TIMEZONE, tz);
+//		}
+//		break;
+	}
+//	case DOORLOCK_MM:{
+		uint8_t mm = 0;
+		res = (SUCCESS == CustNV_getMotorMode(&mm));
+		if(res){
+			Log_printf(STR_RES_MOTORMODE, mm);
+		}
+//		break;
+//	}
+//	case DOORLOCK_MDT:{
+		uint8_t mdt = 0;
+		res = (SUCCESS == CustNV_getMotorTime(&mdt));
+		if(res){
+			Log_printf(STR_RES_MOTORTIME, mdt);
+		}
+//		break;
+//	}
+//	case DOORLOCK_OM:{
+		uint8_t om = 0;
+		res = (SUCCESS == CustNV_getOfficeMode(&om));
+		if(res){
+			Log_printf(STR_RES_OFFICEMODE, om);
+		}
+//		break;
+//	}
+//	case DOORLOCK_OMT:{
+		uint8_t omt = 0;
+		res = (SUCCESS == CustNV_getOfficeTime(&omt));
+		if(res){
+			Log_printf(STR_RES_OFFICETIME, omt);
+		}
+//		break;
+//	}
+//	case DOORLOCK_HBI:{
+		uint8_t hbi = 0;
+		res = (SUCCESS == CustNV_getHBInterval(&hbi));
+		if(res){
+			Log_printf(STR_RES_HBINTERVAL, hbi);
+		}
+		break;
+	}
+	default:{
+		break;
+	}
+	}
+}
+#endif
+
+/*********************************************************************
  * @fn      cmd_taskFxn
  *
  * @brief   Application task entry point for the cmd.
@@ -740,6 +846,48 @@ void cmd_onPin(uint8_t idx, char *cmd)
 				ICall_free(pin);
 			}
 
+		}
+	}
+	else{
+	}
+
+	if(!res){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
+	}
+}
+
+/*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+static void cmd_onDataMode(uint8_t idx, char *cmd)
+{
+	cmdType_e ct = cmd_getType(idx, cmd);
+	bool res = false;
+
+	if(CMD_GET == ct){
+		uint8_t dm = 0;
+		res = (SUCCESS == CustNV_getDatamode(&dm));
+		if(res){
+			Log_printf(STR_RES_DATAMODE, dm);
+		}
+	}
+	else if(CMD_FORMAT == ct){
+		cmd_write(STR_FORMAT_DATAMODE, strlen(STR_FORMAT_DATAMODE));
+		res = true;
+	}
+	else if(CMD_SET == ct){
+		uint32_t dm = 0;
+		if(sscanf(cmd, STR_SET_DATAMODE, &dm) > 0){
+			res = (SUCCESS == CustNV_setDatamode((uint8_t)dm));
+			if(res){
+				cmd_write(STR_RES_OK, strlen(STR_RES_OK));
+			}
 		}
 	}
 	else{
@@ -993,6 +1141,102 @@ void cmd_onHBInterval(uint8_t idx, char *cmd)
 				cmd_write(STR_RES_OK, strlen(STR_RES_OK));
 			}
 		}
+	}
+	else{
+	}
+
+	if(!res){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
+	}
+}
+
+/*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+void cmd_onVersion(uint8_t idx, char *cmd)
+{
+	cmdType_e ct = cmd_getType(idx, cmd);
+	bool res = false;
+
+	if(CMD_GET == ct){
+		Log_printf(STR_RES_VERSION, MAJOR_VER, MINOR_VER, BUILD_VER);
+		res = true;
+	}
+	else if(CMD_FORMAT == ct){
+
+	}
+	else if(CMD_SET == ct){
+
+	}
+	else{
+	}
+
+	if(!res){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
+	}
+}
+
+/*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+void cmd_onModelNumber(uint8_t idx, char *cmd)
+{
+	cmdType_e ct = cmd_getType(idx, cmd);
+	bool res = false;
+
+	if(CMD_GET == ct){
+		Log_printf(STR_RES_MODELNO, MODEL_NO);
+		res = true;
+	}
+	else if(CMD_FORMAT == ct){
+
+	}
+	else if(CMD_SET == ct){
+
+	}
+	else{
+	}
+
+	if(!res){
+		cmd_write(STR_RES_ERROR, strlen(STR_RES_ERROR));
+	}
+}
+
+/*********************************************************************
+ * @fn
+ *
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ */
+void cmd_onModelDesc(uint8_t idx, char *cmd)
+{
+	cmdType_e ct = cmd_getType(idx, cmd);
+	bool res = false;
+
+	if(CMD_GET == ct){
+		Log_printf(STR_RES_MODELDESC, MODEL_DESC);
+		res = true;
+	}
+	else if(CMD_FORMAT == ct){
+
+	}
+	else if(CMD_SET == ct){
+
 	}
 	else{
 	}

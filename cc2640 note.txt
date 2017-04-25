@@ -8,10 +8,24 @@
 1) 由于cmd.c含两个task, 因此多定义CMD_RXTASK_STACK_SIZE, 值400, 减少RXTASK栈开销
 2) 关于昨天的第二点问题解决方法如下:
 1. 在cmd_taskFxn增加ICall_registerApp(&selfEntity, &sem);, 解决ICall_getEntityId()无法获取合法id的问题
-2. 只执行1, osal_snv_write或osal_snv_read不再返回2, 但是程序会跑飞. 解决方法, 在STACK工程修改OSAL_MAX_NUM_PROXY_TASKS值, 增加1. 因为增加了一个task与STACK交互, 所以该值要加1.
+2. 只执行1, osal_snv_write或osal_snv_read不再返回2, 但是程序会跑飞. 解决方法, 在STACK工程修改OSAL_MAX_NUM_PROXY_TASKS值, 增加1, 至3. 因为增加了一个task与STACK交互, 所以该值要加1.
 3) 
 // Customer NV Items - Range  0x80 - 0x8F - This must match the number of Bonding entries
 #define BLE_NVID_CUST_START             0x80  //!< Start of the Customer's NV IDs
 #define BLE_NVID_CUST_END               0x8F  //!< End of the Customer's NV IDs
 这里不是指SNV只能存16个字节, 而是指SNV的用户ID范围.
 每个ID起始, 理论上可以存储252B. 视SNV占用情况而定.
+
+20170414
+1) 完成custmer NV现定义所有参数的AT指令支持(含参数范围查询, 参数读取, 参数写入)
+
+20170419
+1) 完成custmer NV现定义所有参数的service & chars支持(含参数读取, 参数写入)
+
+20170420
+1) 测试过多的chars对连接速度的影响. IOS实测大概读取一个char需要60ms, 对连接速度并没有太大影响
+2) 对连接速度影响主要来自于#define DEFAULT_ADVERTISING_INTERVAL          160//1600//160
+3) 遗留问题: 设备串口批量发送之后出现无法接收处理的问题
+
+20170424
+1) 上次遗留问题解决方法, 增加SBP_TASK_STACK_SIZE, 从700增加至800. 因为增加调用Cmd_onValueChanged, 该函数调用了Log_printf, 需要开更大的栈.

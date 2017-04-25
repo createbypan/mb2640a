@@ -7,6 +7,7 @@
 #include "stdbool.h"
 #include "mb2640a_util.h"
 #include "cust_nv.h"
+#include "doorlockservice.h"
 
 #if (GL_LOG)
 #include "cmd.h"
@@ -44,17 +45,7 @@
 /******************************************************************************
  Local CONST Definition
 *******************************************************************************/
-typedef struct{
-	uint8_t pin[PIN_LEN];
-	bool engMode;
-	dataMode_e dataMode;
-	uint8_t timeZone;
-	motorMode_e motorMode;
-	uint8_t motorDrvTime;
-	officeMode_e officeMode;
-	uint8_t officeTime;
-	hbInterval_e hbInterval;
-} custNV_t;
+
 /******************************************************************************
  Local Function Declaration
 *******************************************************************************/
@@ -66,12 +57,12 @@ static uint8_t para_write(uint8_t *data, custNV_t *paras);
 /******************************************************************************
  External Function Declaration
 *******************************************************************************/
-
+custNV_t custParas = {0};
 /******************************************************************************
  Local Variable Definition
 *******************************************************************************/
 static uint8_t custNV[CUST_NV_SIZE] = {0};
-static custNV_t custParas = {0};
+
 /******************************************************************************
  External Variable Declaration
 *******************************************************************************/
@@ -126,6 +117,7 @@ uint8_t CustNV_restore(void)
 #endif
 	res = para_restore(custNV, &custParas) |
 			osal_snv_write(CUST_NV_ID, CUST_NV_SIZE, custNV);
+	DoorLock_InitParameter();
 #if (GL_LOG && LOG)
 	if(res != SUCCESS){
 		Log_printf("CUST NV RESTORE FAIL: %d\r\n", res);
@@ -204,6 +196,44 @@ uint8_t CustNV_setPin(char *pin)
 	for(i=0; i<PIN_LEN; i++){
 		custParas.pin[i] = pin[i];
 	}
+
+	return CustNV_save();
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_getDatamode(uint8_t *dm)
+{
+	*dm = (uint8_t)custParas.dataMode;
+
+	return SUCCESS;
+}
+
+/*********************************************************************
+ * Function:
+ * PreCondition:
+ * Input:
+ * Output:
+ * Return:
+ * Side Effects:
+ * Overview:
+ * Note:
+ ********************************************************************/
+uint8_t CustNV_setDatamode(uint8_t dm)
+{
+	if(dm > 2){
+		return FAILURE;
+	}
+
+	custParas.dataMode = (dataMode_e)dm;
 
 	return CustNV_save();
 }
@@ -437,7 +467,7 @@ uint8_t CustNV_setHBInterval(uint8_t time)
 	if(time > 3){
 		return FAILURE;
 	}
-	custParas.hbInterval = time;
+	custParas.hbInterval = (hbInterval_e)time;
 
 	return CustNV_save();
 }
