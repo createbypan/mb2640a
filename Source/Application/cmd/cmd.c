@@ -35,7 +35,7 @@
  * CONSTANTS
  */
 #define LOG FALSE
-#define LOG_WRITE_WAIT 500//UART_WAIT_FOREVER
+#define LOG_WRITE_WAIT 5000//5000 = 50ms//UART_WAIT_FOREVER
 
 // Task stack size
 #ifndef CMD_TASK_STACK_SIZE
@@ -371,16 +371,6 @@ int Log_printf(const char *fmt, ...)
 	}
 }
 #endif
-
-/*********************************************************************
- * @fn
- *
- * @brief
- *
- * @param
- *
- * @return  None.
- */
 
 /*********************************************************************
  * @fn

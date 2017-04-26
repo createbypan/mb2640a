@@ -29,3 +29,9 @@
 
 20170424
 1) 上次遗留问题解决方法, 增加SBP_TASK_STACK_SIZE, 从700增加至800. 因为增加调用Cmd_onValueChanged, 该函数调用了Log_printf, 需要开更大的栈.
+
+20170426
+1) 增加kp.c, kp.h, 增加一个task, ICALL_MAX_NUM_TASKS增加至6, 增加taskStack, KP_TASK_STACK_SIZE=400
+2) 增加i2c驱动, 已成功读取按键板键值; 增加键值映射和键码串管理
+键码串分三种类型: 000000# 用户密码, *000000# 超级密码, *#000000# 命令码
+3) 未处理和测试休眠流程

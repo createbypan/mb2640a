@@ -2,7 +2,7 @@
 <link_info>
    <banner>TI ARM Linker PC v15.12.3.LTS</banner>
    <copyright>Copyright (c) 1996-2015 Texas Instruments Incorporated</copyright>
-   <link_time>0x58ff05c0</link_time>
+   <link_time>0x58ff0c81</link_time>
    <link_errors>0x0</link_errors>
    <output_file>MB2640A_Stack.out</output_file>
    <entry_point>
@@ -13,8 +13,8 @@
       <input_file id="fl-10c">
          <path>C:\Users\Panmin\AppData\Local\Temp\</path>
          <kind>object</kind>
-         <file>087882</file>
-         <name>087882</name>
+         <file>049442</file>
+         <name>049442</name>
       </input_file>
       <input_file id="fl-1f">
          <path>C:\ti\simplelink\ble_cc26xx_2_01_00_44423\Projects\common\BLE_ROM_Releases\04242014\</path>

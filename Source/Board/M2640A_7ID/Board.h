@@ -84,9 +84,9 @@ extern PIN_Config BoardGpioInitTable[];
 //#define Board_UART_RTS                      IOID_21         /* RF2.18 */
 #define Board_MRDY_PIN                       IOID_0
 #define Board_SRDY_PIN                       IOID_1
-#define Board_I2C_SDA                       IOID_5
-#define Board_I2C_SCK                       IOID_6
-#define Board_TP_INT                        IOID_4
+#define Board_I2C0_SDA0                     IOID_5
+#define Board_I2C0_SCL0                     IOID_6
+#define Board_KP_INT                        IOID_4
 /* SPI Board */
 /* I2C */
 
@@ -95,6 +95,7 @@ extern PIN_Config BoardGpioInitTable[];
  *  ==========================================================================*/
 /* Generic UART instance identifiers */
 #define Board_UART                  CC2650_UART0
+#define Board_I2C                   CC2650_I2C0
 
 /** ============================================================================
  *  Number of peripherals and their names
@@ -108,6 +109,11 @@ typedef enum CC2650_UARTName {
     CC2650_UART0 = 0,
     CC2650_UARTCOUNT
 } CC2650_UARTName;
+
+typedef enum CC2650_I2CName {
+	CC2650_I2C0 = 0,
+	CC2650_I2CCOUNT
+} CC2650_I2CName;
 
 #ifdef __cplusplus
 }

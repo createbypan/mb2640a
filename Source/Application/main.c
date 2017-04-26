@@ -44,6 +44,7 @@
 #include "peripheral.h"
 #include "mb2640a.h"
 #include "cmd.h"
+#include "kp.h"
 
 /* Header files required to enable instruction fetch cache */
 #include <inc/hw_memmap.h>
@@ -80,7 +81,7 @@ extern uint32_t ti_sysbios_family_arm_m3_Hwi_resetVectors;
  */
 int main()
 {
-  PIN_init(BoardGpioInitTable);
+    PIN_init(BoardGpioInitTable);
 
 #ifndef POWER_SAVING
     /* Set constraints for Standby, powerdown and idle mode */
@@ -98,6 +99,8 @@ int main()
     GAPRole_createTask();
     
     Cmd_createTask();
+
+    Kp_createTask();
 
     SimpleBLEPeripheral_createTask();
 
