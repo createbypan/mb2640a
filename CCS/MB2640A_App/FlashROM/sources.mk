@@ -127,6 +127,7 @@ Application/CMD \
 Application/Cust \
 Application/Doorlock \
 Application/Keypad \
+Application/Keys \
 Application \
 Application/Ringbuff \
 Drivers/I2C \

@@ -45,6 +45,7 @@
 #include "mb2640a.h"
 #include "cmd.h"
 #include "kp.h"
+#include "board_key.h"
 
 /* Header files required to enable instruction fetch cache */
 #include <inc/hw_memmap.h>
@@ -98,6 +99,8 @@ int main()
     /* Kick off profile - Priority 3 */
     GAPRole_createTask();
     
+    Board_initKeys();
+
     Cmd_createTask();
 
     Kp_createTask();

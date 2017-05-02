@@ -24,6 +24,7 @@
 #include "string.h"
 #include "board.h"
 #include "cmd.h"
+#include "board_key.h"
 #include "kp.h"
 
 /*********************************************************************
@@ -134,21 +135,14 @@ static char inputBuf[KP_MAX_INPUT + 1] = {0};
 static uint8_t inputIdx = 0;
 static KPCodeState_e inputState = KP_CODE_STATE_IDLE;
 
-static PIN_Handle hKpIntPin;
-static PIN_State kpIntPin;
-static PIN_Config kpIntPinCfg[] =
-{
-	Board_KP_INT | PIN_GPIO_OUTPUT_DIS | PIN_INPUT_EN | PIN_PULLUP,
-    PIN_TERMINATE
-};
-
 /*********************************************************************
  * LOCAL FUNCTIONS
  */
 static void kp_openI2c(void);
 static void kp_closeI2c(void);
 static void kp_taskRxFxn(UArg a0, UArg a1);
-static void kp_intPINHwiFxn(PIN_Handle hPin, PIN_Id pinId);
+//static void kp_intPINHwiFxn(PIN_Handle hPin, PIN_Id pinId);
+static void kp_intHandler(uint8_t keys);
 static char kp_KeyMap(uint16_t value);
 static bool kp_PushKey(char key);
 static KPCodeState_e kp_CodeProcess(KPCodeState_e state, uint8_t key);
@@ -199,6 +193,8 @@ void kp_closeI2c(void)
  */
 void Kp_createTask(void)
 {
+	Board_registerKPIntHandler(kp_intHandler);
+
 	Semaphore_Params semParams;
 	Semaphore_Params_init(&semParams);
 	semParams.mode = Semaphore_Mode_BINARY;
@@ -228,17 +224,6 @@ void kp_taskRxFxn(UArg a0, UArg a1)
 	for(;;){
 		switch(kpState){
 		case KP_INIT:{
-			// Add PIN IDs to PIN Configuration
-			hKpIntPin = PIN_open(&kpIntPin, kpIntPinCfg);
-			// Enable int after callback registered
-			PIN_registerIntCb(hKpIntPin, kp_intPINHwiFxn);
-			PIN_setConfig(hKpIntPin,
-							  PIN_BM_IRQ,
-							  Board_KP_INT | PIN_IRQ_NEGEDGE);
-			// Enable wakeup
-			PIN_setConfig(hKpIntPin,
-							  PINCC26XX_BM_WAKEUP,
-							  Board_KP_INT | PINCC26XX_WAKEUP_POSEDGE);
 			kpState = KP_RESUME;
 
 			break;
@@ -261,7 +246,7 @@ void kp_taskRxFxn(UArg a0, UArg a1)
 			break;
 		}
 		case KP_RUN:{
-			if(Semaphore_pend(Semaphore_handle(&transSem), I2C_WAIT_KEY)){
+			if(Semaphore_pend(Semaphore_handle(&transSem), I2C_WAIT_FOREVER)){
 				txBuf[0] = 0x01;
 				i2cTrans.writeCount = 1;
 				i2cTrans.writeBuf = txBuf;
@@ -305,6 +290,13 @@ void kp_taskRxFxn(UArg a0, UArg a1)
 							else{
 
 							}
+						}
+						else{
+#if (GL_LOG && LOG)
+							Log_writeStr(inputBuf);
+							Log_writeStr("\r\nKP_CODE_STATE_ERROR\r\n");
+#endif
+							KP_CLEAR_INPUTBUFF();
 						}
 					}
 				}
@@ -497,26 +489,6 @@ KPCodeState_e kp_CodeProcess(KPCodeState_e state, uint8_t key)
 
 		break;
 	}
-//	case KP_CODE_STATE_MNM_WAIT_STAR:{
-//		if(KP_KEY_TYPE_STAR == type){
-//			state = KP_CODE_STATE_MNM_WAIT_HASH;
-//		}
-//		else{
-//			state = KP_CODE_STATE_ERROR;
-//		}
-//
-//		break;
-//	}
-//	case KP_CODE_STATE_MNM_WAIT_HASH:{
-//		if(KP_KEY_TYPE_HASH == type){
-//			state = KP_CODE_STATE_MNM_DONE;//management code done
-//		}
-//		else{
-//			state = KP_CODE_STATE_ERROR;
-//		}
-//
-//		break;
-//	}
 	case KP_CODE_STATE_CMD_START:{
 		if(KP_KEY_TYPE_HASH == type){
 			state = KP_CODE_STATE_CMD_DONE;//cmd code done
@@ -527,31 +499,9 @@ KPCodeState_e kp_CodeProcess(KPCodeState_e state, uint8_t key)
 		else{
 			state = KP_CODE_STATE_ERROR;
 		}
-//		if(KP_KEY_TYPE_STAR == type){
-//			state = KP_CODE_STATE_CMD_WAIT_HASH;
-//		}
-//		else if(KP_KEY_TYPE_NUM == type){
-//			//do nothing
-//		}
-//		else{
-//			state = KP_CODE_STATE_ERROR;
-//		}
 
 		break;
 	}
-//	case KP_CODE_STATE_CMD_WAIT_HASH:{
-//		if(KP_KEY_TYPE_HASH == type){
-//			state = KP_CODE_STATE_CMD_DONE;//cmd code done
-//		}
-//		else if(KP_KEY_TYPE_NUM == type){
-//			//do nothing
-//		}
-//		else{
-//			state = KP_CODE_STATE_ERROR;
-//		}
-//
-//		break;
-//	}
     }
 
     return state;
@@ -566,7 +516,20 @@ KPCodeState_e kp_CodeProcess(KPCodeState_e state, uint8_t key)
  *
  * @return
  */
-void kp_intPINHwiFxn(PIN_Handle hPin, PIN_Id pinId)
+//void kp_intPINHwiFxn(PIN_Handle hPin, PIN_Id pinId)
+//{
+//	Semaphore_post(Semaphore_handle(&transSem));
+//}
+/*********************************************************************
+ * @fn      KeyFobDemo_keyPressHandler
+ *
+ * @brief   Key event handler function
+ *
+ * @param   keys - keys pressed.
+ *
+ * @return  none
+ */
+void kp_intHandler(uint8_t keys)
 {
 	Semaphore_post(Semaphore_handle(&transSem));
 }

@@ -53,6 +53,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/cust&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/doorlock&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/keypad&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/keys&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Common&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board/M2640A_7ID&quot;"/>
@@ -87,7 +88,7 @@
 									<listOptionValue builtIn="false" value="SBP_TASK_STACK_SIZE=800"/>
 									<listOptionValue builtIn="false" value="CMD_TASK_STACK_SIZE=800"/>
 									<listOptionValue builtIn="false" value="CMD_RXTASK_STACK_SIZE=400"/>
-									<listOptionValue builtIn="false" value="KP_TASK_STACK_SIZE=400"/>
+									<listOptionValue builtIn="false" value="KP_TASK_STACK_SIZE=800"/>
 									<listOptionValue builtIn="false" value="GAPROLE_TASK_STACK_SIZE=520"/>
 									<listOptionValue builtIn="false" value="HEAPMGR_SIZE=2672"/>
 									<listOptionValue builtIn="false" value="MAX_PDU_SIZE=27"/>
