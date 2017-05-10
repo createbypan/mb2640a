@@ -36,3 +36,22 @@
 键码串分三种类型: 000000# 用户密码, *000000# 超级密码, *#000000# 命令码
 键值缓冲区21个字节含1个结束符(按字符串处理), 存满20个字节无法形成有效码即返回错误
 3) 未处理和测试休眠流程
+
+20170505
+1) 增加gpio_in, gpio_out两组输入输出管理接口
+2) 遗留问题: 编译出现空间不足的问题. 需要配置cc26xx_ble_app.cmd, cc26xx_ble_stack.cmd, ccsLinkerDefines.cmd
+
+20170508
+1) 遗留问题: gpio_out开启blink, 运行一段时间后程序会停止, 问题未明
+2) gpio_out.c gpioOut_BlinkHandler有一处else大括号错误, 已修改
+
+3) 遗留问题1) 将GpioOut_blink中的Util_startClock改成Util_restartClock, 当blink意外停止时, 可以重新触发闪烁(如果用Util_startClock, 当blink意外停止时, 再调用Util_startClock仍然不行). 问.应该与clock的timeout计算有关. 
+补充, 实际测试gpioOut_BlinkHandler应该没有问题, 因为当时钟停止时, 没有执行过else. 因此判断为clock在持续restart是出现计数问题.
+if(next > 0){
+	Util_restartClock(&gpioOutBlinkClock.handle, next);
+}
+else{
+	Util_restartClock(&gpioOutBlinkClock.handle, 10);
+}
+4) 20170505遗留问题2), 暂时将编译的优化等级改到whole program解决.
+5) 遗留问题1)暂缓处理, 因暂不影响功能使用.

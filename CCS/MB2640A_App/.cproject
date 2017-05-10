@@ -53,7 +53,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/cust&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/doorlock&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/keypad&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/keys&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/gpio&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Common&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board/M2640A_7ID&quot;"/>
@@ -163,6 +163,55 @@
 								<option id="com.ti.rtsc.buildDefinitions.XDC_3.16.tool.CODEGEN_TOOL_DIR.1407494496" name="Compiler tools directory (-c)" superClass="com.ti.rtsc.buildDefinitions.XDC_3.16.tool.CODEGEN_TOOL_DIR" value="&quot;${CG_TOOL_ROOT}&quot;" valueType="string"/>
 								<option id="com.ti.rtsc.buildDefinitions.XDC_3.16.tool.COMPILE_OPTIONS.466630457" name="Additional compiler options (--compileOptions)" superClass="com.ti.rtsc.buildDefinitions.XDC_3.16.tool.COMPILE_OPTIONS" value="&quot;${COMPILER_FLAGS}&quot;" valueType="string"/>
 							</tool>
+						</toolChain>
+					</folderInfo>
+					<folderInfo id="com.ti.ccstudio.buildDefinitions.TMS470.Default.67178137.353748138" name="/" resourcePath="Application">
+						<toolChain id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.exe.DebugToolchain.1068029683" name="TI Build Tools" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.exe.DebugToolchain" unusedChildren="">
+							<option id="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS.349632370.1943910537" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS.349632370"/>
+							<option id="com.ti.ccstudio.buildDefinitions.core.OPT_CODEGEN_VERSION.2067274940.1536105423" name="Compiler version" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_CODEGEN_VERSION.2067274940"/>
+							<targetPlatform id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.exe.targetPlatformDebug" name="Platform" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.exe.targetPlatformDebug"/>
+							<tool id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.exe.compilerDebug.1619281339" name="ARM Compiler" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.exe.compilerDebug.434200619">
+								<option id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compilerID.INCLUDE_PATH.1909782113" name="Add dir to #include search path (--include_path, -I)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compilerID.INCLUDE_PATH" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/cmd&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/ringbuff&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/cust&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/doorlock&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/keypad&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Application/gpio&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Common&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/Board/M2640A_7ID&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/ICall/Application&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/ICall/Include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../Source/ICall/Stack&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/Profiles/Roles/CC26xx&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/Profiles/Roles&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Projects/ble/common/cc26xx&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/applib/heap&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/ble/hci&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/ble/controller/CC26xx/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/ble/host&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/hal/target/CC2650TIRTOS&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/hal/target/_common/cc26xx&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/hal/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/osal/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/services/sdata&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/services/saddr&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/icall/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ORG_PROJ_DIR}/../../../../../../../Components/ble/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${CC26XXWARE}&quot;"/>
+								</option>
+								<inputType id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compiler.inputType__C_SRCS.2037570682" name="C Sources" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compiler.inputType__C_SRCS"/>
+								<inputType id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compiler.inputType__CPP_SRCS.433725788" name="C++ Sources" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compiler.inputType__CPP_SRCS"/>
+								<inputType id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compiler.inputType__ASM_SRCS.1847292932" name="Assembly Sources" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compiler.inputType__ASM_SRCS"/>
+								<inputType id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compiler.inputType__ASM2_SRCS.1268901664" name="Assembly Sources" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.compiler.inputType__ASM2_SRCS"/>
+							</tool>
+							<tool id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.exe.linkerDebug.849619972" name="ARM Linker" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.exe.linkerDebug.1124892532"/>
+							<tool id="com.ti.ccstudio.buildDefinitions.TMS470_16.12.hex.915717281" name="ARM Hex Utility" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.12.hex.243973953"/>
+							<tool id="com.ti.rtsc.buildDefinitions.XDC_3.16.tool.751278972" name="XDCtools" superClass="com.ti.rtsc.buildDefinitions.XDC_3.16.tool.666133923"/>
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>

@@ -61,12 +61,12 @@
 */
 PIN_Config BoardGpioInitTable[] = {
 
-    Board_UART_TX    | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH   | PIN_PUSHPULL,                     /* UART TX pin at inactive level */
-	Board_MRDY_PIN   | PIN_INPUT_EN  | PIN_PULLUP | PIN_HYSTERESIS,
-	Board_SRDY_PIN   | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH   | PIN_PUSHPULL,
-	Board_KP_INT     | PIN_INPUT_EN | PIN_PULLUP | PIN_HYSTERESIS,
-	Board_I2C0_SCL0  | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH   | PIN_PUSHPULL,
-	Board_I2C0_SDA0  | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH   | PIN_PUSHPULL,
+//    Board_UART_TX    | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH   | PIN_PUSHPULL,                     /* UART TX pin at inactive level */
+//	Board_MRDY_PIN   | PIN_INPUT_EN  | PIN_PULLUP | PIN_HYSTERESIS,
+//	Board_SRDY_PIN   | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH   | PIN_PUSHPULL,
+//	Board_KP_INT     | PIN_INPUT_EN | PIN_PULLUP | PIN_HYSTERESIS,
+//	Board_I2C0_SCL0  | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH   | PIN_PUSHPULL,
+//	Board_I2C0_SDA0  | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH   | PIN_PUSHPULL,
     PIN_TERMINATE                                                                               /* Terminate list                */
 };
 /*============================================================================*/

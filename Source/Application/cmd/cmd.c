@@ -29,13 +29,15 @@
 #include "ringbuff.h"
 #include "cmd.h"
 #include "cust_nv.h"
+#include "gpio_in.h"
+#include "gpio_out.h"
 #include "doorlockservice.h"
 
 /*********************************************************************
  * CONSTANTS
  */
-#define LOG FALSE
-#define LOG_WRITE_WAIT UART_WAIT_FOREVER//500//5000 = 50ms//UART_WAIT_FOREVER
+#define LOG TRUE
+#define LOG_WRITE_WAIT 5000//5000 = 50ms//UART_WAIT_FOREVER
 
 // Task stack size
 #ifndef CMD_TASK_STACK_SIZE
@@ -55,15 +57,11 @@
 #define UART_RX_BUF_SIZE 32
 
 #ifdef POWER_SAVING
-// Indexes for pin configurations in PIN_Config array
-#define REM_RDY_PIN_IDX      0
-#define LOC_RDY_PIN_IDX      1
-
-#define LocRDY_ENABLE()      PIN_setOutputValue(hCmdHandshakePins, locRdyPIN, 0)
-#define LocRDY_DISABLE()     PIN_setOutputValue(hCmdHandshakePins, locRdyPIN, 1)
+#define SRDY_ENABLE()      GpioOut_set(GPIOOUT_SRDY, GPIOOUT_ON)
+#define SRDY_DISABLE()     GpioOut_set(GPIOOUT_SRDY, GPIOOUT_OFF)
 #else
-#define LocRDY_ENABLE()
-#define LocRDY_DISABLE()
+#define SRDY_ENABLE()
+#define SRDY_DISABLE()
 #endif //POWER_SAVING
 
 #define STR_LEN_VALID_PIN (11 + PIN_LEN)
@@ -108,10 +106,10 @@
 typedef enum
 {
 	CMD_INIT = 0,
-	CMD_PRERESUME,
+//	CMD_PRERESUME,
 	CMD_RESUME,
 	CMD_RUN,
-	CMD_PRESUSPEND,
+//	CMD_PRESUSPEND,
 	CMD_SUSPEND,
 	CMD_DEINIT
 } cmdState_e;
@@ -166,26 +164,7 @@ static cmdState_e cmdState = CMD_INIT;
 
 #ifdef POWER_SAVING
 static Semaphore_Struct cmdSBSem = {0};
-
-//! \brief PIN Config for Mrdy and Srdy signals without PIN IDs
-static PIN_Config cmdHandshakePinsCfg[] =
-{
-    PIN_GPIO_OUTPUT_DIS | PIN_INPUT_EN | PIN_PULLUP,
-    PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MAX,
-    PIN_TERMINATE
-};
-
-static uint32_t remRdyPIN = (IOID_UNUSED & IOC_IOID_MASK);
-static uint32_t locRdyPIN = (IOID_UNUSED & IOC_IOID_MASK);
-
-//! \brief PIN State for remRdy and locRdy signals
-static PIN_State cmdHandshakePins;
-
-//! \brief PIN Handles for remRdy and locRdy signals
-static PIN_Handle hCmdHandshakePins;
-
 static uint8_t remRdy_state;
-
 #endif //! POWER_SAVING
 
 /*********************************************************************
@@ -216,8 +195,7 @@ static void cmd_onModelNumber(uint8_t idx, char *cmd);
 static void cmd_onModelDesc(uint8_t idx, char *cmd);
 
 #ifdef POWER_SAVING
-//! \brief HWI interrupt function for remRdy
-static void cmd_remRdyPINHwiFxn(PIN_Handle hPin, PIN_Id pinId);
+static void cmd_MRDYHandler(uint8_t events);
 static void cmd_setPM(void);
 static void cmd_relPM(void);
 #endif //POWER_SAVING
@@ -383,6 +361,10 @@ int Log_printf(const char *fmt, ...)
  */
 void Cmd_createTask(void)
 {
+#ifdef POWER_SAVING
+	GpioIn_registerHandler(GPIOIN_MRDY, cmd_MRDYHandler);
+#endif //POWER_SAVING
+
 	Semaphore_Params semParams;
 	Semaphore_Params_init(&semParams);
 	semParams.mode = Semaphore_Mode_BINARY;
@@ -428,44 +410,9 @@ void cmd_taskRxFxn(UArg a0, UArg a1)
 	for(;;){
 		switch(cmdState){
 		case CMD_INIT:{
-#ifdef POWER_SAVING
-			remRdyPIN = (Board_MRDY_PIN & IOC_IOID_MASK);
-			locRdyPIN = (Board_SRDY_PIN & IOC_IOID_MASK);
-
-			// Add PIN IDs to PIN Configuration
-			cmdHandshakePinsCfg[REM_RDY_PIN_IDX] |= remRdyPIN;
-			cmdHandshakePinsCfg[LOC_RDY_PIN_IDX] |= locRdyPIN;
-
-			// Initialize LOCRDY/REMRDY. Enable int after callback registered
-			hCmdHandshakePins = PIN_open(&cmdHandshakePins, cmdHandshakePinsCfg);
-			PIN_registerIntCb(hCmdHandshakePins, cmd_remRdyPINHwiFxn);
-			PIN_setConfig(hCmdHandshakePins,
-						  PIN_BM_IRQ,
-						  remRdyPIN | PIN_IRQ_BOTHEDGES);
-
-			// Enable wakeup
-			PIN_setConfig(hCmdHandshakePins,
-						  PINCC26XX_BM_WAKEUP,
-						  remRdyPIN | PINCC26XX_WAKEUP_NEGEDGE);
-
-			remRdy_state = PIN_getInputValue(remRdyPIN);
-			if(!remRdy_state){
-				cmd_setPM();
-				cmdState = CMD_RESUME;
-			}
-			else{
-				cmdState = CMD_SUSPEND;
-			}
-#else
-			cmdState = CMD_PRERESUME;
-#endif //POWER_SAVING
 			cmdRxBuf = Ringbuff_init(CMD_BUFF_SIZE);
-			break;
-		}
-		case CMD_PRERESUME:{
 #ifdef POWER_SAVING
-			Task_sleep(5000);//50ms
-			remRdy_state = PIN_getInputValue(remRdyPIN);
+			remRdy_state = GpioIn_getStatus(GPIOIN_MRDY);
 			if(!remRdy_state){
 				cmd_setPM();
 				cmdState = CMD_RESUME;
@@ -475,10 +422,11 @@ void cmd_taskRxFxn(UArg a0, UArg a1)
 			}
 #else
 			cmdState = CMD_RESUME;
-#endif
+#endif //POWER_SAVING
 			break;
 		}
 		case CMD_RESUME:{
+			cmd_setPM();
 			if(!cmdActive){
 				cmd_openUart();
 				Semaphore_post(Semaphore_handle(&cmdTxSem));
@@ -487,7 +435,7 @@ void cmd_taskRxFxn(UArg a0, UArg a1)
 #if (GL_LOG && LOG)
 			cmd_write("CMD_RESUME\r\n", strlen("CMD_RESUME\r\n"));
 #endif
-			LocRDY_ENABLE();
+			SRDY_ENABLE();
 			cmdState = CMD_RUN;
 			break;
 		}
@@ -504,35 +452,19 @@ void cmd_taskRxFxn(UArg a0, UArg a1)
 			}
 			break;
 		}
-		case CMD_PRESUSPEND:{
-#ifdef POWER_SAVING
-			Task_sleep(5000);//50ms
-			remRdy_state = PIN_getInputValue(remRdyPIN);
-			if(!remRdy_state){
-				cmdState = CMD_RESUME;
-			}
-			else{
-				cmdState = CMD_SUSPEND;
-			}
-#else
-			cmdState = CMD_SUSPEND;
-#endif
-			break;
-		}
 		case CMD_SUSPEND:{
 			if(cmdActive){
 #if (GL_LOG && LOG)
 				cmd_write("CMD_SUSPEND\r\n", strlen("CMD_SUSPEND\r\n"));
 #endif
-				Semaphore_pend(Semaphore_handle(&cmdTxSem), UART_WAIT_FOREVER);
+				Semaphore_pend(Semaphore_handle(&cmdTxSem), UART_WAIT_FOREVER);//wait for other tasks to release TX, then hold the TX
 				cmd_closeUart();
 				cmdActive = false;
 			}
 #ifdef POWER_SAVING
-			LocRDY_DISABLE();
+			SRDY_DISABLE();
 			cmd_relPM();
-			Semaphore_pend(Semaphore_handle(&cmdSBSem), UART_WAIT_FOREVER);
-			cmd_setPM();
+			Semaphore_pend(Semaphore_handle(&cmdSBSem), UART_WAIT_FOREVER);//hold here waiting for MRDY
 #endif // POWER_SAVING
 			break;
 		}
@@ -1245,19 +1177,44 @@ void cmd_onModelDesc(uint8_t idx, char *cmd)
 //!
 //! \return     void
 // -----------------------------------------------------------------------------
+//#ifdef POWER_SAVING
+//void cmd_remRdyPINHwiFxn(PIN_Handle hPin, PIN_Id pinId)
+//{
+//	if (remRdy_state != PIN_getInputValue(remRdyPIN)){
+//		remRdy_state = PIN_getInputValue(remRdyPIN);
+//		if(CMD_SUSPEND == cmdState){
+//			cmdState = CMD_PRERESUME;
+//			Semaphore_post(Semaphore_handle(&cmdSBSem));
+//		}
+//		else if(CMD_RUN == cmdState){
+//			cmdState = CMD_PRESUSPEND;
+//			Semaphore_post(Semaphore_handle(&cmdRxSem));
+//		}
+//	}
+//}
+//#endif //POWER_SAVING
+/*********************************************************************
+ * @fn      cmd_MRDYHandler
+ *
+ * @brief   Key event handler function
+ *
+ * @param   keys - keys pressed.
+ *
+ * @return  none
+ */
 #ifdef POWER_SAVING
-void cmd_remRdyPINHwiFxn(PIN_Handle hPin, PIN_Id pinId)
+void cmd_MRDYHandler(uint8_t events)
 {
-	if (remRdy_state != PIN_getInputValue(remRdyPIN)){
-		remRdy_state = PIN_getInputValue(remRdyPIN);
-		if(CMD_SUSPEND == cmdState){
-			cmdState = CMD_PRERESUME;
-			Semaphore_post(Semaphore_handle(&cmdSBSem));
-		}
-		else if(CMD_RUN == cmdState){
-			cmdState = CMD_PRESUSPEND;
-			Semaphore_post(Semaphore_handle(&cmdRxSem));
-		}
+	if(events & GPIOIN_EVT_MRDY_DOWN){
+		cmdState = CMD_RESUME;
+		Semaphore_post(Semaphore_handle(&cmdSBSem));
+	}
+	else if(events & GPIOIN_EVT_MRDY_UP){
+		cmdState = CMD_SUSPEND;
+		Semaphore_post(Semaphore_handle(&cmdRxSem));
+	}
+	else{
+
 	}
 }
 #endif //POWER_SAVING

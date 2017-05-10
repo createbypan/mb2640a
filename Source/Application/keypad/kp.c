@@ -17,6 +17,7 @@
 
 #include <ti/sysbios/knl/Task.h>
 #include <ti/sysbios/knl/Semaphore.h>
+#include <ti/sysbios/knl/Clock.h>
 #include <ti/sysbios/knl/Queue.h>
 #include <ti/drivers/pin/PINCC26XX.h>
 #include <ti/drivers/i2c/I2CCC26XX.h>
@@ -24,13 +25,21 @@
 #include "string.h"
 #include "board.h"
 #include "cmd.h"
-#include "board_key.h"
+#include "gpio_in.h"
 #include "kp.h"
 
 /*********************************************************************
  * CONSTANTS
  */
 #define LOG TRUE
+
+#if (GL_LOG && LOG)
+#define KP_WRITESTRING(S) Log_writeStr(S)
+#define KP_PRINTF(F, V) Log_printf(F, V)
+#else
+#define KP_WRITESTRING(S)
+#define KP_PRINTF(F, V)
+#endif
 
 #define I2C_WAIT_FOREVER (~0)
 #define I2C_WAIT_KEY 5000 //5000 = 50ms
@@ -141,7 +150,6 @@ static KPCodeState_e inputState = KP_CODE_STATE_IDLE;
 static void kp_openI2c(void);
 static void kp_closeI2c(void);
 static void kp_taskRxFxn(UArg a0, UArg a1);
-//static void kp_intPINHwiFxn(PIN_Handle hPin, PIN_Id pinId);
 static void kp_intHandler(uint8_t keys);
 static char kp_KeyMap(uint16_t value);
 static bool kp_PushKey(char key);
@@ -193,7 +201,7 @@ void kp_closeI2c(void)
  */
 void Kp_createTask(void)
 {
-	Board_registerKPIntHandler(kp_intHandler);
+	GpioIn_registerHandler(GPIOIN_KPINT, kp_intHandler);
 
 	Semaphore_Params semParams;
 	Semaphore_Params_init(&semParams);
@@ -238,9 +246,7 @@ void kp_taskRxFxn(UArg a0, UArg a1)
 				kp_openI2c();
 				kpActive = true;
 			}
-#if (GL_LOG && LOG)
-			Log_writeStr("KP_RESUME\r\n");
-#endif
+			KP_WRITESTRING("KP_RESUME\r\n");
 			kpState = KP_RUN;
 
 			break;
@@ -260,31 +266,23 @@ void kp_taskRxFxn(UArg a0, UArg a1)
 						if(kp_PushKey(key)){
 							inputState = kp_CodeProcess(inputState, key);
 							if(KP_CODE_STATE_CUS_DONE == inputState){
-#if (GL_LOG && LOG)
-								Log_writeStr(inputBuf);
-								Log_writeStr("\r\nKP_CODE_STATE_CUS_DONE\r\n");
-#endif
+								KP_WRITESTRING(inputBuf);
+								KP_WRITESTRING("\r\nKP_CODE_STATE_CUS_DONE\r\n");
 								KP_CLEAR_INPUTBUFF();
 							}
 							else if(KP_CODE_STATE_MNM_DONE == inputState){
-#if (GL_LOG && LOG)
-								Log_writeStr(inputBuf);
-								Log_writeStr("\r\nKP_CODE_STATE_MNM_DONE\r\n");
-#endif
+								KP_WRITESTRING(inputBuf);
+								KP_WRITESTRING("\r\nKP_CODE_STATE_MNM_DONE\r\n");
 								KP_CLEAR_INPUTBUFF();
 							}
 							else if(KP_CODE_STATE_CMD_DONE == inputState){
-#if (GL_LOG && LOG)
-								Log_writeStr(inputBuf);
-								Log_writeStr("\r\nKP_CODE_STATE_CMD_DONE\r\n");
-#endif
+								KP_WRITESTRING(inputBuf);
+								KP_WRITESTRING("\r\nKP_CODE_STATE_CMD_DONE\r\n");
 								KP_CLEAR_INPUTBUFF();
 							}
 							else if(KP_CODE_STATE_ERROR == inputState){
-#if (GL_LOG && LOG)
-								Log_writeStr(inputBuf);
-								Log_writeStr("\r\nKP_CODE_STATE_ERROR\r\n");
-#endif
+								KP_WRITESTRING(inputBuf);
+								KP_WRITESTRING("\r\nKP_CODE_STATE_ERROR\r\n");
 								KP_CLEAR_INPUTBUFF();
 							}
 							else{
@@ -292,10 +290,8 @@ void kp_taskRxFxn(UArg a0, UArg a1)
 							}
 						}
 						else{
-#if (GL_LOG && LOG)
-							Log_writeStr(inputBuf);
-							Log_writeStr("\r\nKP_CODE_STATE_ERROR\r\n");
-#endif
+							KP_WRITESTRING(inputBuf);
+							KP_WRITESTRING("\r\nKP_CODE_STATE_ERROR\r\n");
 							KP_CLEAR_INPUTBUFF();
 						}
 					}
@@ -311,9 +307,7 @@ void kp_taskRxFxn(UArg a0, UArg a1)
 		}
 		case KP_SUSPEND:{
 			if(kpActive){
-#if (GL_LOG && LOG)
-				Log_writeStr("KP_SUSPEND\r\n");
-#endif
+				KP_WRITESTRING("KP_SUSPEND\r\n");
 				kp_closeI2c();
 				kpActive = false;
 			}
@@ -373,9 +367,7 @@ char kp_KeyMap(uint16_t value)
 	}
 
 	if('\0' != key){
-#if (GL_LOG && LOG)
-		Log_printf("+KEY=%c\r\n", key);
-#endif
+		KP_PRINTF("+KEY=%c\r\n", key);
 	}
 
 	return key;
@@ -477,7 +469,6 @@ KPCodeState_e kp_CodeProcess(KPCodeState_e state, uint8_t key)
 	}
 	case KP_CODE_STATE_MNM_START:{
 		if(KP_KEY_TYPE_HASH == type){
-			//state = KP_CODE_STATE_MNM_WAIT_STAR;
 			state = KP_CODE_STATE_MNM_DONE;//management code done
 		}
 		else if(KP_KEY_TYPE_NUM == type){
@@ -508,20 +499,7 @@ KPCodeState_e kp_CodeProcess(KPCodeState_e state, uint8_t key)
 }
 
 /*********************************************************************
- * @fn
- *
- * @brief
- *
- * @param
- *
- * @return
- */
-//void kp_intPINHwiFxn(PIN_Handle hPin, PIN_Id pinId)
-//{
-//	Semaphore_post(Semaphore_handle(&transSem));
-//}
-/*********************************************************************
- * @fn      KeyFobDemo_keyPressHandler
+ * @fn      kp_intHandler
  *
  * @brief   Key event handler function
  *

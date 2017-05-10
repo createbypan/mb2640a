@@ -3,6 +3,5 @@
 /* CCS Linker Command Line Options */
 /* Auto-generated linker option(s) */
 
-
 --define=ICALL_STACK0_ADDR=0x0000E000
 --define=ICALL_RAM0_ADDR=0x200043E8

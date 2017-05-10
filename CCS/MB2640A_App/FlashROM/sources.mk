@@ -126,8 +126,8 @@ SUBDIRS := \
 Application/CMD \
 Application/Cust \
 Application/Doorlock \
+Application/GPIO \
 Application/Keypad \
-Application/Keys \
 Application \
 Application/Ringbuff \
 Drivers/I2C \

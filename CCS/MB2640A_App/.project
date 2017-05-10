@@ -87,14 +87,14 @@
 			<location>C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/SimpleBLEPeripheral/CC26xx/Source/Application/doorlock</location>
 		</link>
 		<link>
+			<name>Application/GPIO</name>
+			<type>2</type>
+			<location>C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/SimpleBLEPeripheral/CC26xx/Source/Application/gpio</location>
+		</link>
+		<link>
 			<name>Application/Keypad</name>
 			<type>2</type>
 			<location>C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/SimpleBLEPeripheral/CC26xx/Source/Application/keypad</location>
-		</link>
-		<link>
-			<name>Application/Keys</name>
-			<type>2</type>
-			<location>C:/ti/simplelink/ble_cc26xx_2_01_00_44423/Projects/ble/SimpleBLEPeripheral/CC26xx/Source/Application/keys</location>
 		</link>
 		<link>
 			<name>Application/MB2640A.c</name>

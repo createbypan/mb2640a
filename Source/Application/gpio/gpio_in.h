@@ -1,13 +1,13 @@
 /*******************************************************************************
-  Filename:       board_key.h
+  Filename:       gpio_in.h
   Revised:        $Date:  $
   Revision:       $Revision:  $
 
   Description:
 *******************************************************************************/
 
-#ifndef BOARD_KEY_H
-#define BOARD_KEY_H
+#ifndef GPIO_IN_H
+#define GPIO_IN_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,7 +16,7 @@ extern "C" {
 /*********************************************************************
  * INCLUDES
  */
-#include "stdint.h"
+#include <ti/drivers/PIN.h>
 
 /*********************************************************************
 *  EXTERNAL VARIABLES
@@ -25,18 +25,18 @@ extern "C" {
 /*********************************************************************
  * CONSTANTS
  */
-#define KEYEVT_MRDY_DOWN         0x0001
-#define KEYEVT_MRDY_UP           0x0002
-#define KEYEVT_KP_INT            0x0004
-   
-// Debounce timeout in milliseconds
-#define KEY_MRDY_DEBOUNCE_TIMEOUT  100
-#define KEY_KPINT_DEBOUNCE_TIMEOUT  10
+#define GPIOIN_MRDY 0
+#define GPIOIN_KPINT 1
+#define GPIOIN_CNT (GPIOIN_KPINT + 1)
+
+#define GPIOIN_EVT_MRDY_DOWN         0x0001
+#define GPIOIN_EVT_MRDY_UP           0x0002
+#define GPIOIN_EVT_KPINT            0x0004
 
 /*********************************************************************
  * TYPEDEFS
  */
-typedef void (*keysPressedCB_t)(uint8_t keysPressed);
+typedef void (*gpioInCB_t)(uint8_t gpioIns);
 
 /*********************************************************************
  * MACROS
@@ -45,19 +45,9 @@ typedef void (*keysPressedCB_t)(uint8_t keysPressed);
 /*********************************************************************
  * API FUNCTIONS
  */
-
-/*********************************************************************
- * @fn      Board_initKeys
- *
- * @brief   Enable interrupts for keys on GPIOs.
- *
- * @param   appKeyCB - application key pressed callback
- *
- * @return  none
- */
-void Board_initKeys();
-void Board_registerMRDYHandler(keysPressedCB_t handler);
-void Board_registerKPIntHandler(keysPressedCB_t handler);
+void GpioIn_initPins();
+bool GpioIn_registerHandler(uint8_t id, gpioInCB_t cb);
+uint_t GpioIn_getStatus(uint8_t id);
 
 /*********************************************************************
 *********************************************************************/  
@@ -66,4 +56,4 @@ void Board_registerKPIntHandler(keysPressedCB_t handler);
 }
 #endif
 
-#endif /* BOARD_KEY_H */
+#endif /* GPIO_IN_H */
